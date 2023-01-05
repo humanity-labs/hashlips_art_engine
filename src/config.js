@@ -2,17 +2,17 @@ const basePath = process.cwd();
 const { MODE } = require(`${basePath}/constants/blend_mode.js`);
 const { NETWORK } = require(`${basePath}/constants/network.js`);
 
-const network = NETWORK.eth;
+const network = NETWORK.sol;
 
 // General metadata for Ethereum
-const namePrefix = "Your Collection";
-const description = "Remember to replace this description";
+const namePrefix = "BB's";
+const description = "BB's NFTs";
 const baseUri = "ipfs://NewUriToReplace";
 
 const solanaMetadata = {
-  symbol: "YC",
+  symbol: "BB",
   seller_fee_basis_points: 1000, // Define how much % you want from secondary market sales 1000 = 10%
-  external_url: "https://www.youtube.com/c/hashlipsnft",
+  external_url: "https://www.twitter.com/bbs_nft",
   creators: [
     {
       address: "7fXNuer5sbZtaTEPhtJ5g5gNtuyRoKkvxdjEjEnPN4mC",
@@ -24,27 +24,112 @@ const solanaMetadata = {
 // If you have selected Solana then the collection starts from 0 automatically
 const layerConfigurations = [
   {
-    growEditionSizeTo: 5,
+    growEditionSizeTo: 75,
     layersOrder: [
-      { name: "Background" },
-      { name: "Eyeball" },
-      { name: "Eye color" },
-      { name: "Iris" },
-      { name: "Shine" },
-      { name: "Bottom lid" },
-      { name: "Top lid" },
+      { name: "Backgrounds" },
+      { name: "Base" },
+      { name: "Mouths" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      { name: "Hair" },
+      // { name: "Hats" },
+      { name: "Clothes" },
+      { name: "Neck" },
     ],
   },
+  {
+    growEditionSizeTo: 150,
+    layersOrder: [
+      { name: "Backgrounds" },
+      { name: "Base" },
+      { name: "Mouths" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      // { name: "Hair" },
+      { name: "Hats" },
+      { name: "Clothes" },
+      { name: "Neck" },
+    ],
+  },
+  {
+    growEditionSizeTo: 225,
+    layersOrder: [
+      { name: "Backgrounds" },
+      { name: "Base" },
+      { name: "Mouths" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      // { name: "Hair" },
+      { name: "Hats" },
+      { name: "Clothes" },
+      { name: "Neck" },
+    ],
+  },
+  {
+    growEditionSizeTo: 300,
+    layersOrder: [
+      { name: "Backgrounds" },
+      { name: "Base" },
+      { name: "Mouths" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      { name: "Hair" },
+      // { name: "Hats" },
+      { name: "Clothes" },
+      { name: "Neck" },
+    ],
+  },
+  /*{
+    growEditionSizeTo: 50,
+    layersOrder: [
+      { name: "Background" },
+      { name: "Base" },
+      { name: "Hat" },
+      { name: "Hat-Logo" },
+      { name: "Shirt" },
+    ],
+  },
+  {
+    growEditionSizeTo: 75,
+    layersOrder: [
+      { name: "Background" },
+      { name: "Base" },
+      { name: "Hat" },
+      { name: "Hat-Logo" },
+      { name: "Hoodie" },
+    ],
+  },
+  {
+    growEditionSizeTo: 100,
+    layersOrder: [
+      { name: "Background" },
+      { name: "Base" },
+      { name: "Hat" },
+      { name: "Hoodie" },
+    ],
+  },
+  {
+    growEditionSizeTo: 125,
+    layersOrder: [
+      { name: "Background" },
+      { name: "Base" },
+      { name: "Hat" },
+      { name: "Shirt" },
+    ],
+  },*/
 ];
 
 const shuffleLayerConfigurations = false;
-
-const debugLogs = false;
+const debugLogs = true;
 
 const format = {
-  width: 512,
-  height: 512,
-  smoothing: false,
+  width: 1024,
+  height: 1024,
+  smoothing: true,
 };
 
 const gif = {
@@ -55,16 +140,16 @@ const gif = {
 };
 
 const text = {
-  only: false,
-  color: "#ffffff",
-  size: 20,
-  xGap: 40,
-  yGap: 40,
-  align: "left",
-  baseline: "top",
-  weight: "regular",
-  family: "Courier",
-  spacer: " => ",
+  // only: false,
+  // color: "#ffffff",
+  // size: 20,
+  // xGap: 40,
+  // yGap: 40,
+  // align: "left",
+  // baseline: "top",
+  // weight: "regular",
+  // family: "Courier",
+  // spacer: " => ",
 };
 
 const pixelFormat = {
@@ -73,9 +158,9 @@ const pixelFormat = {
 
 const background = {
   generate: true,
-  brightness: "80%",
-  static: false,
-  default: "#000000",
+  brightness: "70%",
+  static: true,
+  default: "#0a0a0a",
 };
 
 const extraMetadata = {};
@@ -85,14 +170,14 @@ const rarityDelimiter = "#";
 const uniqueDnaTorrance = 10000;
 
 const preview = {
-  thumbPerRow: 5,
-  thumbWidth: 50,
+  thumbPerRow: 3,
+  thumbWidth: 250,
   imageRatio: format.height / format.width,
   imageName: "preview.png",
 };
 
 const preview_gif = {
-  numberOfImages: 5,
+  numberOfImages: 20,
   order: "ASC", // ASC, DESC, MIXED
   repeat: 0,
   quality: 100,
