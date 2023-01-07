@@ -214,12 +214,207 @@ const layerConfigurations = [
       { name: "Clothes" },
     ],
   },
+
+  /**
+   * Blue
+   */
+  {
+    growEditionSizeTo: 450,
+    layersOrder: [
+      {
+        name: "Background Blue",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Blue",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 500,
+    layersOrder: [
+      {
+        name: "Background Blue",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Blue",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 550,
+    layersOrder: [
+      {
+        name: "Background Blue",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Blue",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 600,
+    layersOrder: [
+      {
+        name: "Background Blue",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Blue",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+
+  /**
+   * Green
+   */
+  {
+    growEditionSizeTo: 650,
+    layersOrder: [
+      {
+        name: "Background Green",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Green",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 700,
+    layersOrder: [
+      {
+        name: "Background Green",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Green",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 750,
+    layersOrder: [
+      {
+        name: "Background Green",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Green",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 800,
+    layersOrder: [
+      {
+        name: "Background Green",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Green",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
 ];
 
-const shuffleLayerConfigurations = false;
 const debugLogs = true;
 
+// TODO: not quite sure what this does..
+const shuffleLayerConfigurations = false;
+
 const format = {
+  // TODO: how large of format do we want to generate artwork for?
   width: 1024,
   height: 1024,
   smoothing: true,

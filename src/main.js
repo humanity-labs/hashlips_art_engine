@@ -22,6 +22,7 @@ const {
   solanaMetadata,
   gif,
 } = require(`${basePath}/src/config.js`);
+const { performance } = require('perf_hooks');
 
 const canvas = createCanvas(format.width, format.height);
 const ctx = canvas.getContext("2d");
@@ -361,6 +362,7 @@ const startCreating = async () => {
     while (
       editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo
     ) {
+      const start_ts = performance.now();
       let newDna = createDna(layers);
       if (isDnaUnique(dnaList, newDna)) {
         let results = constructLayerToDna(newDna, layers);
@@ -375,7 +377,7 @@ const startCreating = async () => {
           ctx.clearRect(0, 0, format.width, format.height);
 
           if (gif.export) {
-            console.debug(`> exporting gif..`);
+            console.debug(`> adding gif export..`);
             hashlipsGiffer = new HashlipsGiffer(
               canvas,
               ctx,
@@ -415,8 +417,10 @@ const startCreating = async () => {
           saveMetaDataSingleFile(abstractedIndexes[0]);
 
           const dna = sha1(newDna);
+          const end_ts = performance.now();
           console.debug(
-            `> Created edition: ${abstractedIndexes[0]}, with DNA: ${dna}\n`
+            `> Created edition: ${abstractedIndexes[0]}, with DNA: ${dna}\n`, 
+            `${((end_ts - start_ts) / 1000 / 60).toFixed(2)}mm`,
           );
         });
         dnaList.add(filterDNAOptions(newDna));
