@@ -5,15 +5,10 @@
 All the code in these repos was created and explained by HashLips on the main YouTube channel.
 
 To find out more please visit:
-
 [📺 YouTube](https://www.youtube.com/channel/UC1LV4_VQGBJHTJjEWUmy8nA)
-
 [👄 Discord](https://discord.com/invite/qh6MWhMJDN)
-
 [💬 Telegram](https://t.me/hashlipsnft)
-
 [🐦 Twitter](https://twitter.com/hashlipsnft)
-
 [ℹ️ Website](https://hashlips.online/HashLips)
 
 # HashLips Art Engine 🔥
@@ -21,6 +16,7 @@ To find out more please visit:
 ![](https://github.com/HashLips/hashlips_art_engine/blob/main/banner.png)
 
 Create generative art by using the canvas api and node js. Before you use the generation engine, make sure you have node.js(v10.18.0) installed.
+
 
 ## Installation 🛠️
 
@@ -44,7 +40,9 @@ npm install
 
 ## Usage ℹ️
 
-Create your different layers as folders in the 'layers' directory, and add all the layer assets in these directories. You can name the assets anything as long as it has a rarity weight attached in the file name like so: `example element#70.png`. You can optionally change the delimiter `#` to anything you would like to use in the variable `rarityDelimiter` in the `src/config.js` file.
+Create your different layers as folders in the 'layers' directory, and add all the layer assets in these directories.
+You can name the assets anything as long as it has a rarity weight attached in the file name like so: `example element#70.png`.
+You can optionally change the delimiter `#` to anything you would like to use in the variable `rarityDelimiter` in the `src/config.js` file.
 
 Once you have all your layers, go into `src/config.js` and update the `layerConfigurations` objects `layersOrder` array to be your layer folders name in order of the back layer to the front layer.
 
@@ -67,9 +65,13 @@ const layerConfigurations = [
 
 The `name` of each layer object represents the name of the folder (in `/layers/`) that the images reside in.
 
-Optionally you can now add multiple different `layerConfigurations` to your collection. Each configuration can be unique and have different layer orders, use the same layers or introduce new ones. This gives the artist flexibility when it comes to fine tuning their collections to their needs.
+Optionally you can now add multiple different `layerConfigurations` to your collection.
+Each configuration can be unique and have different layer orders, use the same layers or introduce new ones.
+This gives the artist flexibility when it comes to fine tuning their collections to their needs.
 
-_Example:_ If you were creating a portrait design, you might have a background, then a head, a mouth, eyes, eyewear, and then headwear and you want to create a new race or just simple re-order the layers or even introduce new layers, then you're `layerConfigurations` and `layersOrder` would look something like this:
+_Example:_ If you were creating a portrait design, you might have a background, then a head, a mouth, eyes, eyewear,
+and then headwear and you want to create a new race or just simple re-order the layers or even introduce new layers,
+then you're `layerConfigurations` and `layersOrder` would look something like this:
 
 ```js
 const layerConfigurations = [
@@ -103,17 +105,22 @@ const layerConfigurations = [
 
 Update your `format` size, ie the outputted image size, and the `growEditionSizeTo` on each `layerConfigurations` object, which is the amount of variation outputted.
 
-You can mix up the `layerConfigurations` order on how the images are saved by setting the variable `shuffleLayerConfigurations` in the `config.js` file to true. It is false by default and will save all images in numerical order.
+You can mix up the `layerConfigurations` order on how the images are saved by setting the variable `shuffleLayerConfigurations` in the `config.js` file to true.
+It is false by default and will save all images in numerical order.
 
-If you want to have logs to debug and see what is happening when you generate images you can set the variable `debugLogs` in the `config.js` file to true. It is false by default, so you will only see general logs.
+If you want to have logs to debug and see what is happening when you generate images you can set the variable `debugLogs` in the `config.js` file to true.
+It is false by default, so you will only see general logs.
 
 If you want to play around with different blending modes, you can add a `blend: MODE.colorBurn` field to the layersOrder `options` object.
 
 If you need a layers to have a different opacity then you can add the `opacity: 0.7` field to the layersOrder `options` object as well.
 
-If you want to have a layer _ignored_ in the DNA uniqueness check, you can set `bypassDNA: true` in the `options` object. This has the effect of making sure the rest of the traits are unique while not considering the `Background` Layers as traits, for example. The layers _are_ included in the final image.
+If you want to have a layer _ignored_ in the DNA uniqueness check, you can set `bypassDNA: true` in the `options` object.
+This has the effect of making sure the rest of the traits are unique while not considering the `Background` Layers as traits, for example.
+The layers _are_ included in the final image.
 
-To use a different metadata attribute name you can add the `displayName: "Awesome Eye Color"` to the `options` object. All options are optional and can be addes on the same layer if you want to.
+To use a different metadata attribute name you can add the `displayName: "Awesome Eye Color"` to the `options` object.
+All options are optional and can be added on the same layer if you want to.
 
 Here is an example on how you can play around with both filter fields:
 
@@ -190,7 +197,10 @@ or
 node index.js
 ```
 
-The program will output all the images in the `build/images` directory along with the metadata files in the `build/json` directory. Each collection will have a `_metadata.json` file that consists of all the metadata in the collection inside the `build/json` directory. The `build/json` folder also will contain all the single json files that represent each image file. The single json file of a image will look something like this:
+The program will output all the images in the `build/images` directory along with the metadata files in the `build/json` directory.
+Each collection will have a `_metadata.json` file that consists of all the metadata in the collection inside the `build/json` directory.
+The `build/json` folder also will contain all the single json files that represent each image file.
+The single json file of a image will look something like this:
 
 ```json
 {
@@ -233,7 +243,8 @@ That's it, you're done.
 
 ### Updating baseUri for IPFS and description
 
-You might possibly want to update the baseUri and description after you have ran your collection. To update the baseUri and description simply run:
+You might possibly want to update the `baseUri` and `description` after you have ran your collection.
+To update the `baseUri` and description simply run:
 
 ```sh
 npm run update_info
@@ -249,7 +260,8 @@ npm run preview
 
 ### Generate pixelated images from collection
 
-In order to convert images into pixelated images you would need a list of images that you want to convert. So run the generator first.
+In order to convert images into pixelated images you would need a list of images that you want to convert.
+So run the generator first.
 
 Then simply run this command:
 

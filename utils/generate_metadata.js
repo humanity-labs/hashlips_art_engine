@@ -51,7 +51,7 @@ const loadImgData = async (_imgObject) => {
       loadedImage: image,
     };
   } catch (error) {
-    console.error("Error loading image:", error);
+    console.error("Error loading image:", _imgObject.path, error);
   }
 };
 
@@ -70,7 +70,8 @@ const addRarity = () => {
   let rgb = imgdata.data;
   let newRgb = { r: 0, g: 0, b: 0 };
   const tolerance = 15;
-  const rareColorBase = "NOT a Hot Dog";
+
+  const rareColorBase = "NOT a Hot Dog"; // ?
   const rareColor = [
     { name: "Hot Dog", rgb: { r: 192, g: 158, b: 131 } },
     { name: "Hot Dog", rgb: { r: 128, g: 134, b: 90 } },
@@ -97,9 +98,10 @@ const addRarity = () => {
     }
   });
 
-  console.log(newRgb);
-  console.log(rarity);
+  console.log(`newRgb:`, newRgb);
+  console.log(`rarity:`, rarity);
 
+  // TODO: ?
   return [
     {
       trait_type: "average color",
@@ -143,7 +145,7 @@ const saveMetadata = (_loadedImageObject) => {
     image: `${baseUri}/${shortName}.png`,
     edition: Number(shortName),
     attributes: tempAttributes,
-    compiler: "HashLips Art Engine",
+    // compiler: "HashLips Art Engine",
   };
   fs.writeFileSync(
     `${buildDir}/${shortName}.json`,

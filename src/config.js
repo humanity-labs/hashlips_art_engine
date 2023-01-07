@@ -5,17 +5,17 @@ const { NETWORK } = require(`${basePath}/constants/network.js`);
 const network = NETWORK.sol;
 
 // General metadata for Ethereum
-const namePrefix = "BB's";
-const description = "BB's NFTs";
+const namePrefix = "BBs";
+const description = "BB Pods are the beginning of the BB story.";
 const baseUri = "ipfs://NewUriToReplace";
 
 const solanaMetadata = {
   symbol: "BB",
-  seller_fee_basis_points: 1000, // Define how much % you want from secondary market sales 1000 = 10%
-  external_url: "https://www.twitter.com/bbs_nft",
+  seller_fee_basis_points: 999, // Define how much % you want from secondary market sales 1000 = 10%
+  external_url: "https://www.bb.social",
   creators: [
     {
-      address: "7fXNuer5sbZtaTEPhtJ5g5gNtuyRoKkvxdjEjEnPN4mC",
+      address: "2UV6yqyEkgEfeptupzWq84sx5B9sZXeMYgHnJpFVNCgE",
       share: 100,
     },
   ],
@@ -23,104 +23,197 @@ const solanaMetadata = {
 
 // If you have selected Solana then the collection starts from 0 automatically
 const layerConfigurations = [
+  /**
+   * Yellow
+   */
   {
-    growEditionSizeTo: 75,
-    layersOrder: [
-      { name: "Backgrounds" },
-      { name: "Base" },
-      { name: "Mouths" },
-      { name: "Eyes" },
-      { name: "Brows" },
-      // { name: "Eyewear" },
-      { name: "Hair" },
-      // { name: "Hats" },
-      { name: "Clothes" },
-      { name: "Neck" },
-    ],
-  },
-  {
-    growEditionSizeTo: 150,
-    layersOrder: [
-      { name: "Backgrounds" },
-      { name: "Base" },
-      { name: "Mouths" },
-      { name: "Eyes" },
-      { name: "Brows" },
-      // { name: "Eyewear" },
-      // { name: "Hair" },
-      { name: "Hats" },
-      { name: "Clothes" },
-      { name: "Neck" },
-    ],
-  },
-  {
-    growEditionSizeTo: 225,
-    layersOrder: [
-      { name: "Backgrounds" },
-      { name: "Base" },
-      { name: "Mouths" },
-      { name: "Eyes" },
-      { name: "Brows" },
-      { name: "Eyewear" },
-      // { name: "Hair" },
-      { name: "Hats" },
-      { name: "Clothes" },
-      { name: "Neck" },
-    ],
-  },
-  {
-    growEditionSizeTo: 300,
-    layersOrder: [
-      { name: "Backgrounds" },
-      { name: "Base" },
-      { name: "Mouths" },
-      { name: "Eyes" },
-      { name: "Brows" },
-      { name: "Eyewear" },
-      { name: "Hair" },
-      // { name: "Hats" },
-      { name: "Clothes" },
-      { name: "Neck" },
-    ],
-  },
-  /*{
     growEditionSizeTo: 50,
     layersOrder: [
-      { name: "Background" },
-      { name: "Base" },
-      { name: "Hat" },
-      { name: "Hat-Logo" },
-      { name: "Shirt" },
-    ],
-  },
-  {
-    growEditionSizeTo: 75,
-    layersOrder: [
-      { name: "Background" },
-      { name: "Base" },
-      { name: "Hat" },
-      { name: "Hat-Logo" },
-      { name: "Hoodie" },
+      {
+        name: "Background Yellow",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Yellow",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
     ],
   },
   {
     growEditionSizeTo: 100,
     layersOrder: [
-      { name: "Background" },
-      { name: "Base" },
-      { name: "Hat" },
-      { name: "Hoodie" },
+      {
+        name: "Background Yellow",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Yellow",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
     ],
   },
   {
-    growEditionSizeTo: 125,
+    growEditionSizeTo: 150,
     layersOrder: [
-      { name: "Background" },
-      { name: "Base" },
+      {
+        name: "Background Yellow",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Yellow",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
       { name: "Hat" },
-      { name: "Shirt" },
+      { name: "Clothes" },
     ],
-  },*/
+  },
+  {
+    growEditionSizeTo: 200,
+    layersOrder: [
+      {
+        name: "Background Yellow",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Yellow",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+
+  /**
+   * Red
+   */
+  {
+    growEditionSizeTo: 250,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 300,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      // { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 350,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
+  {
+    growEditionSizeTo: 400,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      { name: "Mouth" },
+      { name: "Eyes" },
+      { name: "Brows" },
+      // { name: "Eyewear" },
+      { name: "Hat" },
+      { name: "Clothes" },
+    ],
+  },
 ];
 
 const shuffleLayerConfigurations = false;
@@ -163,10 +256,12 @@ const background = {
   default: "#0a0a0a",
 };
 
-const extraMetadata = {};
+const extraMetadata = {
 
+};
 const rarityDelimiter = "#";
 
+// Torrance is Tolerance..?
 const uniqueDnaTorrance = 10000;
 
 const preview = {
@@ -193,7 +288,7 @@ module.exports = {
   uniqueDnaTorrance,
   layerConfigurations,
   rarityDelimiter,
-  preview,
+  // preview,
   shuffleLayerConfigurations,
   debugLogs,
   extraMetadata,
@@ -203,5 +298,5 @@ module.exports = {
   network,
   solanaMetadata,
   gif,
-  preview_gif,
+  // preview_gif,
 };

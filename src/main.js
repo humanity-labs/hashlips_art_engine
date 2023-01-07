@@ -22,6 +22,7 @@ const {
   solanaMetadata,
   gif,
 } = require(`${basePath}/src/config.js`);
+
 const canvas = createCanvas(format.width, format.height);
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = format.smoothing;
@@ -46,6 +47,7 @@ const buildSetup = () => {
 };
 
 const getRarityWeight = (_str) => {
+  // todo: should find last index of `.` char and slice to end..
   let nameWithoutExtension = _str.slice(0, -4);
   var nameWithoutWeight = Number(
     nameWithoutExtension.split(rarityDelimiter).pop()
@@ -349,9 +351,9 @@ const startCreating = async () => {
   if (shuffleLayerConfigurations) {
     abstractedIndexes = shuffle(abstractedIndexes);
   }
-  debugLogs
-    ? console.log("Editions left to create: ", abstractedIndexes)
-    : null;
+  
+  console.log("> Editions left to create: ", abstractedIndexes);
+
   while (layerConfigIndex < layerConfigurations.length) {
     const layers = layersSetup(
       layerConfigurations[layerConfigIndex].layersOrder
@@ -369,9 +371,11 @@ const startCreating = async () => {
         });
 
         await Promise.all(loadedElements).then((renderObjectArray) => {
-          debugLogs ? console.log("Clearing canvas") : null;
+          console.log("> Clearing canvas");
           ctx.clearRect(0, 0, format.width, format.height);
+
           if (gif.export) {
+            console.debug(`> exporting gif..`);
             hashlipsGiffer = new HashlipsGiffer(
               canvas,
               ctx,
@@ -382,45 +386,51 @@ const startCreating = async () => {
             );
             hashlipsGiffer.start();
           }
+
           if (background.generate) {
+            console.debug(`> generating background..`);
             drawBackground();
           }
+
           renderObjectArray.forEach((renderObject, index) => {
             drawElement(
               renderObject,
               index,
               layerConfigurations[layerConfigIndex].layersOrder.length
             );
+
             if (gif.export) {
               hashlipsGiffer.add();
             }
           });
+
           if (gif.export) {
             hashlipsGiffer.stop();
           }
-          debugLogs
-            ? console.log("Editions left to create: ", abstractedIndexes)
-            : null;
+
+          console.log("> Editions left to create: ", abstractedIndexes);
+          
           saveImage(abstractedIndexes[0]);
           addMetadata(newDna, abstractedIndexes[0]);
           saveMetaDataSingleFile(abstractedIndexes[0]);
-          console.log(
-            `Created edition: ${abstractedIndexes[0]}, with DNA: ${sha1(
-              newDna
-            )}`
+
+          const dna = sha1(newDna);
+          console.debug(
+            `> Created edition: ${abstractedIndexes[0]}, with DNA: ${dna}\n`
           );
         });
         dnaList.add(filterDNAOptions(newDna));
         editionCount++;
         abstractedIndexes.shift();
+
       } else {
-        console.log("DNA exists!");
+        console.warn("DNA exists!");
         failedCount++;
         if (failedCount >= uniqueDnaTorrance) {
-          console.log(
-            `You need more layers or elements to grow your edition to ${layerConfigurations[layerConfigIndex].growEditionSizeTo} artworks!`
+          console.warn(
+            `> You need more layers or elements to grow your edition to ${layerConfigurations[layerConfigIndex].growEditionSizeTo} artworks!`
           );
-          process.exit();
+          process.exit(1);
         }
       }
     }
