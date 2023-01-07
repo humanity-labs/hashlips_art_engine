@@ -27,13 +27,13 @@ const { performance } = require('perf_hooks');
 const canvas = createCanvas(format.width, format.height);
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = format.smoothing;
-var metadataList = [];
-var attributesList = [];
-var dnaList = new Set();
+let metadataList = [];
+let attributesList = [];
+let dnaList = new Set();
 const DNA_DELIMITER = "-";
 const HashlipsGiffer = require(`${basePath}/modules/HashlipsGiffer.js`);
-
 let hashlipsGiffer = null;
+
 
 const buildSetup = () => {
   if (fs.existsSync(buildDir)) {
@@ -142,7 +142,7 @@ const addMetadata = (_dna, _edition) => {
     date: dateTime,
     ...extraMetadata,
     attributes: attributesList,
-    compiler: "HashLips Art Engine",
+    // compiler: "HashLips Art Engine",
   };
   if (network == NETWORK.sol) {
     tempMetadata = {
@@ -189,7 +189,7 @@ const loadLayerImg = async (_layer) => {
       resolve({ layer: _layer, loadedImage: image });
     });
   } catch (error) {
-    console.error("Error loading image:", error);
+    console.error("Error loading image:", _layer.selectedElement.path, error);
   }
 };
 
@@ -204,20 +204,26 @@ const addText = (_sig, x, y, size) => {
 const drawElement = (_renderObject, _index, _layersLen) => {
   ctx.globalAlpha = _renderObject.layer.opacity;
   ctx.globalCompositeOperation = _renderObject.layer.blend;
-  text.only
-    ? addText(
-        `${_renderObject.layer.name}${text.spacer}${_renderObject.layer.selectedElement.name}`,
-        text.xGap,
-        text.yGap * (_index + 1),
-        text.size
-      )
-    : ctx.drawImage(
-        _renderObject.loadedImage,
-        0,
-        0,
-        format.width,
-        format.height
-      );
+  
+  if (text.only) {
+    console.debug(`> Drawing text to canvas..`);
+    addText(
+      `${_renderObject.layer.name}${text.spacer}${_renderObject.layer.selectedElement.name}`,
+      text.xGap,
+      text.yGap * (_index + 1),
+      text.size
+    );
+  }
+  else {
+    console.debug(`> Drawing image to canvas..`);
+    ctx.drawImage(
+      _renderObject.loadedImage,
+      0,
+      0,
+      format.width,
+      format.height
+    );
+  }
 
   addAttributes(_renderObject);
 };
@@ -312,11 +318,9 @@ const writeMetaData = (_data) => {
 
 const saveMetaDataSingleFile = (_editionCount) => {
   let metadata = metadataList.find((meta) => meta.edition == _editionCount);
-  debugLogs
-    ? console.log(
-        `Writing metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
-      )
-    : null;
+  console.debug(
+    `> Writing metadata for ${_editionCount}: ${JSON.stringify(metadata, null, 2)}`
+  );
   fs.writeFileSync(
     `${buildDir}/json/${_editionCount}.json`,
     JSON.stringify(metadata, null, 2)
@@ -324,8 +328,7 @@ const saveMetaDataSingleFile = (_editionCount) => {
 };
 
 function shuffle(array) {
-  let currentIndex = array.length,
-    randomIndex;
+  let currentIndex = array.length, randomIndex;
   while (currentIndex != 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
@@ -353,7 +356,7 @@ const startCreating = async () => {
     abstractedIndexes = shuffle(abstractedIndexes);
   }
   
-  console.log("> Editions left to create: ", abstractedIndexes);
+  console.debug("> Creating Editions:", abstractedIndexes);
 
   while (layerConfigIndex < layerConfigurations.length) {
     const layers = layersSetup(
@@ -373,7 +376,13 @@ const startCreating = async () => {
           loadedElements.push(loadLayerImg(layer));
         });
 
-        await Promise.all(loadedElements).then((renderObjectArray) => {
+        // TODO: this is fucking slow as hell going 1 at a time..
+        // modify this to first generate unqiue DNA hashes based upon
+        // layer compositions & configs, then fan out artwork 
+        // generation across a throttled queue of concurrent / async
+        // functions..
+
+        await Promise.all(loadedElements).then((renderObjectArray, idx) => {
           // console.log("> Clearing canvas");
           ctx.clearRect(0, 0, format.width, format.height);
 
@@ -391,7 +400,7 @@ const startCreating = async () => {
           }
 
           if (background.generate) {
-            console.debug(`> generating background..`);
+            console.debug(`> Generating background..`);
             drawBackground();
           }
 
@@ -411,7 +420,7 @@ const startCreating = async () => {
             hashlipsGiffer.stop();
           }
 
-          console.log("> Editions left to create: ", abstractedIndexes);
+          console.debug(`> Editions left to create (${abstractedIndexes.length}):`, abstractedIndexes);
           
           saveImage(abstractedIndexes[0]);
           addMetadata(newDna, abstractedIndexes[0]);
@@ -420,8 +429,8 @@ const startCreating = async () => {
           const dna = sha1(newDna);
           const end_ts = performance.now();
           console.debug(
-            `> Created edition: ${abstractedIndexes[0]}, with DNA: ${dna}\n`, 
-            `${((end_ts - start_ts) / 1000 / 60).toFixed(2)}mm`,
+            `> Created edition: #${abstractedIndexes[0]}, DNA (hash): ${dna}\n`, 
+            `  ${((end_ts - start_ts) / 1000 / 60).toFixed(2)}mm\n`,
           );
         });
         dnaList.add(filterDNAOptions(newDna));
@@ -439,7 +448,7 @@ const startCreating = async () => {
         }
       }
     }
-    
+
     layerConfigIndex++;
   }
   writeMetaData(JSON.stringify(metadataList, null, 2));
