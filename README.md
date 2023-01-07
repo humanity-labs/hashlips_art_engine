@@ -11,31 +11,31 @@ To find out more please visit:
 [🐦 Twitter](https://twitter.com/hashlipsnft)
 [ℹ️ Website](https://hashlips.online/HashLips)
 
+
 # HashLips Art Engine 🔥
 
 ![](https://github.com/HashLips/hashlips_art_engine/blob/main/banner.png)
 
-Create generative art by using the canvas api and node js. Before you use the generation engine, make sure you have node.js(v10.18.0) installed.
+Create generative art by using the canvas api and node js. Before you use the generation engine,
+make sure you have node.js (>=v10.18.0) installed.
 
+-----
 
 ## Installation 🛠️
 
-If you are cloning the project then run this first, otherwise you can download the source code on the release page and skip this step.
+If you are cloning the project then run this first, otherwise you can download the source code
+on the release page and skip this step.
 
 ```sh
-git clone https://github.com/HashLips/hashlips_art_engine.git
+git clone https://github.com/humanity-labs/hashlips_art_engine.git
 ```
 
 Go to the root of your folder and run this command if you have yarn installed.
 
 ```sh
+nvm use v14.17.5
+npm install -g yarn
 yarn install
-```
-
-Alternatively you can run this command if you have node installed.
-
-```sh
-npm install
 ```
 
 ## Usage ℹ️
@@ -44,9 +44,11 @@ Create your different layers as folders in the 'layers' directory, and add all t
 You can name the assets anything as long as it has a rarity weight attached in the file name like so: `example element#70.png`.
 You can optionally change the delimiter `#` to anything you would like to use in the variable `rarityDelimiter` in the `src/config.js` file.
 
-Once you have all your layers, go into `src/config.js` and update the `layerConfigurations` objects `layersOrder` array to be your layer folders name in order of the back layer to the front layer.
+Once you have all your layers, go into `src/config.js` and update the `layerConfigurations` objects `layersOrder` array to be your
+layer folders name in order of the back layer to the front layer.
 
-_Example:_ If you were creating a portrait design, you might have a background, then a head, a mouth, eyes, eyewear, and then headwear, so your `layersOrder` would look something like this:
+_Example:_ If you were creating a portrait design, you might have a background, then a head, a mouth, eyes, eyewear, and then headwear,
+so your `layersOrder` would look something like this:
 
 ```js
 const layerConfigurations = [
@@ -103,7 +105,8 @@ const layerConfigurations = [
 ];
 ```
 
-Update your `format` size, ie the outputted image size, and the `growEditionSizeTo` on each `layerConfigurations` object, which is the amount of variation outputted.
+Update your `format` size, ie the outputted image size, and the `growEditionSizeTo` on each `layerConfigurations` object,
+which is the amount of variation outputted.
 
 You can mix up the `layerConfigurations` order on how the images are saved by setting the variable `shuffleLayerConfigurations` in the `config.js` file to true.
 It is false by default and will save all images in numerical order.
@@ -129,11 +132,11 @@ const layerConfigurations = [
   {
     growEditionSizeTo: 5,
     layersOrder: [
-      { name: "Background" , {
+      { name: "Background" , 
         options: {
-          bypassDNA: false;
+          bypassDNA: false,
         }
-      }},
+      },
       { name: "Eyeball" },
       {
         name: "Eye color",
@@ -223,7 +226,8 @@ The single json file of a image will look something like this:
 }
 ```
 
-You can also add extra metadata to each metadata file by adding your extra items, (key: value) pairs to the `extraMetadata` object variable in the `config.js` file.
+You can also add extra metadata to each metadata file by adding your extra items,
+(key: value) pairs to the `extraMetadata` object variable in the `config.js` file.
 
 ```js
 const extraMetadata = {
@@ -270,7 +274,8 @@ npm run pixelate
 ```
 
 All your images will be outputted in the `/build/pixel_images` directory.
-If you want to change the ratio of the pixelation then you can update the ratio property on the `pixelFormat` object in the `src/config.js` file. The lower the number on the left, the more pixelated the image will be.
+If you want to change the ratio of the pixelation then you can update the ratio property on the `pixelFormat` object in the `src/config.js` file.
+The lower the number on the left, the more pixelated the image will be.
 
 ```js
 const pixelFormat = {
@@ -280,7 +285,8 @@ const pixelFormat = {
 
 ### Generate GIF images from collection
 
-In order to export gifs based on the layers created, you just need to set the export on the `gif` object in the `src/config.js` file to `true`. You can also play around with the `repeat`, `quality` and the `delay` of the exported gif.
+In order to export gifs based on the layers created, you just need to set the export on the `gif` object in the `src/config.js` file to `true`.
+You can also play around with the `repeat`, `quality` and the `delay` of the exported gif.
 
 Setting the `repeat: -1` will produce a one time render and `repeat: 0` will loop forever.
 

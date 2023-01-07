@@ -359,6 +359,7 @@ const startCreating = async () => {
     const layers = layersSetup(
       layerConfigurations[layerConfigIndex].layersOrder
     );
+
     while (
       editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo
     ) {
@@ -373,7 +374,7 @@ const startCreating = async () => {
         });
 
         await Promise.all(loadedElements).then((renderObjectArray) => {
-          console.log("> Clearing canvas");
+          // console.log("> Clearing canvas");
           ctx.clearRect(0, 0, format.width, format.height);
 
           if (gif.export) {
@@ -438,6 +439,7 @@ const startCreating = async () => {
         }
       }
     }
+    
     layerConfigIndex++;
   }
   writeMetaData(JSON.stringify(metadataList, null, 2));
