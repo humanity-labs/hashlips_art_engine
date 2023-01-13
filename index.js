@@ -1,7 +1,7 @@
 const basePath = process.cwd();
-const { startCreating, buildSetup } = require(`${basePath}/src/main.js`);
+const { build, buildSetup } = require(`${basePath}/src/main.js`);
 
 (() => {
   buildSetup();
-  startCreating();
+  build();
 })();

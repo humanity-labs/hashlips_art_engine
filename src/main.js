@@ -23,10 +23,11 @@ const {
   gif,
 } = require(`${basePath}/src/config.js`);
 const { performance } = require('perf_hooks');
+const PQueue = require('p-queue').default;
 
-const canvas = createCanvas(format.width, format.height);
-const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = format.smoothing;
+// const canvas = createCanvas(format.width, format.height);
+// const ctx = canvas.getContext("2d");
+// ctx.imageSmoothingEnabled = format.smoothing;
 let metadataList = [];
 let attributesList = [];
 let dnaList = new Set();
@@ -34,6 +35,17 @@ const DNA_DELIMITER = "-";
 const HashlipsGiffer = require(`${basePath}/modules/HashlipsGiffer.js`);
 let hashlipsGiffer = null;
 
+const queue = new PQueue({
+  concurrency: 5,
+  autoStart: true,
+});
+
+const generate = () => {
+  const canvas = createCanvas(format.width, format.height);
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = format.smoothing;
+  return { canvas, ctx };
+};
 
 const buildSetup = () => {
   if (fs.existsSync(buildDir)) {
@@ -113,7 +125,7 @@ const layersSetup = (layersOrder) => {
   return layers;
 };
 
-const saveImage = (_editionCount) => {
+const saveImage = async (canvas, _editionCount) => {
   fs.writeFileSync(
     `${buildDir}/images/${_editionCount}.png`,
     canvas.toBuffer("image/png")
@@ -126,7 +138,7 @@ const genColor = () => {
   return pastel;
 };
 
-const drawBackground = () => {
+const drawBackground = (ctx) => {
   ctx.fillStyle = background.static ? background.default : genColor();
   ctx.fillRect(0, 0, format.width, format.height);
 };
@@ -175,7 +187,7 @@ const addMetadata = (_dna, _edition) => {
 };
 
 const addAttributes = (_element) => {
-  let selectedElement = _element.layer.selectedElement;
+  const selectedElement = _element.layer.selectedElement;
   attributesList.push({
     trait_type: _element.layer.name,
     value: selectedElement.name,
@@ -193,7 +205,7 @@ const loadLayerImg = async (_layer) => {
   }
 };
 
-const addText = (_sig, x, y, size) => {
+const addText = (ctx, _sig, x, y, size) => {
   ctx.fillStyle = text.color;
   ctx.font = `${text.weight} ${size}pt ${text.family}`;
   ctx.textBaseline = text.baseline;
@@ -201,13 +213,15 @@ const addText = (_sig, x, y, size) => {
   ctx.fillText(_sig, x, y);
 };
 
-const drawElement = (_renderObject, _index, _layersLen) => {
+const drawElement = (ctx, _renderObject, _index, _layersLen) => {
+  const start = performance.now();
   ctx.globalAlpha = _renderObject.layer.opacity;
   ctx.globalCompositeOperation = _renderObject.layer.blend;
   
   if (text.only) {
     console.debug(`> Drawing text to canvas..`);
     addText(
+      ctx,
       `${_renderObject.layer.name}${text.spacer}${_renderObject.layer.selectedElement.name}`,
       text.xGap,
       text.yGap * (_index + 1),
@@ -224,6 +238,9 @@ const drawElement = (_renderObject, _index, _layersLen) => {
       format.height
     );
   }
+
+  const end = performance.now();
+  console.debug(`> drawElement`, ((end - start) / 1000).toFixed(2), `sec`);
 
   addAttributes(_renderObject);
 };
@@ -316,10 +333,10 @@ const writeMetaData = (_data) => {
   fs.writeFileSync(`${buildDir}/json/_metadata.json`, _data);
 };
 
-const saveMetaDataSingleFile = (_editionCount) => {
-  let metadata = metadataList.find((meta) => meta.edition == _editionCount);
+const saveMetaDataSingleFile = async (_editionCount) => {
+  const metadata = metadataList.find((meta) => meta.edition == _editionCount);
   console.debug(
-    `> Writing metadata for ${_editionCount}: ${JSON.stringify(metadata, null, 2)}`
+    `> Writing metadata for`, _editionCount, `: ${JSON.stringify(metadata, null, 2)}`
   );
   fs.writeFileSync(
     `${buildDir}/json/${_editionCount}.json`,
@@ -340,7 +357,7 @@ function shuffle(array) {
   return array;
 }
 
-const startCreating = async () => {
+const build = async () => {
   let layerConfigIndex = 0;
   let editionCount = 1;
   let failedCount = 0;
@@ -356,102 +373,127 @@ const startCreating = async () => {
     abstractedIndexes = shuffle(abstractedIndexes);
   }
   
-  console.debug("> Creating Editions:", abstractedIndexes);
+  console.debug("> Creating Editions:", abstractedIndexes.length, abstractedIndexes);
 
   while (layerConfigIndex < layerConfigurations.length) {
     const layers = layersSetup(
       layerConfigurations[layerConfigIndex].layersOrder
     );
 
-    while (
-      editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo
-    ) {
-      const start_ts = performance.now();
-      let newDna = createDna(layers);
-      if (isDnaUnique(dnaList, newDna)) {
-        let results = constructLayerToDna(newDna, layers);
-        let loadedElements = [];
+    const editions = [];
+    while (editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo) {
+      let dna = createDna(layers);
 
-        results.forEach((layer) => {
-          loadedElements.push(loadLayerImg(layer));
-        });
+      editions.push({
+        edition: editionCount,
+        abstractedIndex: abstractedIndexes[0],
+        dna,
+        dnaHash: sha1(dna),
+        layers: constructLayerToDna(dna, layers),
+        layer: generate(),
+      });
 
-        // TODO: this is fucking slow as hell going 1 at a time..
-        // modify this to first generate unqiue DNA hashes based upon
-        // layer compositions & configs, then fan out artwork 
-        // generation across a throttled queue of concurrent / async
-        // functions..
+      dnaList.add(filterDNAOptions(dna));
 
-        await Promise.all(loadedElements).then((renderObjectArray, idx) => {
-          // console.log("> Clearing canvas");
-          ctx.clearRect(0, 0, format.width, format.height);
+      editionCount++;
+      abstractedIndexes.shift();
+    }
 
-          if (gif.export) {
-            console.debug(`> adding gif export..`);
-            hashlipsGiffer = new HashlipsGiffer(
-              canvas,
-              ctx,
-              `${buildDir}/gifs/${abstractedIndexes[0]}.gif`,
-              gif.repeat,
-              gif.quality,
-              gif.delay
-            );
-            hashlipsGiffer.start();
-          }
+    const ops = editions.map(async (edition, idx) => {
+      return queue.add(async () => {
+        // const isUnique = isDnaUnique(dnaList, edition.dna);
+        const isUnique = true;
 
-          if (background.generate) {
-            console.debug(`> Generating background..`);
-            drawBackground();
-          }
+        if (isUnique) {
+          const start_ts = performance.now();
+          const loadedElements = edition.layers.map((layer) => loadLayerImg(layer));
 
-          renderObjectArray.forEach((renderObject, index) => {
-            drawElement(
-              renderObject,
-              index,
-              layerConfigurations[layerConfigIndex].layersOrder.length
-            );
+          // TODO: this is fucking slow as hell going 1 at a time..
+          // modify this to first generate unqiue DNA hashes based upon
+          // layer compositions & configs, then fan out artwork 
+          // generation across a throttled queue of concurrent / async
+          // functions..
+
+          return Promise.all(loadedElements).then(async (renderObjectArray, idx) => {
+            // console.log("> Clearing canvas");
+            edition.layer.ctx.clearRect(0, 0, format.width, format.height);
 
             if (gif.export) {
-              hashlipsGiffer.add();
+              console.debug(`> adding gif export..`);
+              hashlipsGiffer = new HashlipsGiffer(
+                edition.layer.canvas,
+                edition.layer.ctx,
+                `${buildDir}/gifs/${edition.abstractedIndex}.gif`,
+                gif.repeat,
+                gif.quality,
+                gif.delay
+              );
+              hashlipsGiffer.start();
             }
+
+            if (background.generate) {
+              console.debug(`> Generating background..`);
+              drawBackground(edition.layer.ctx);
+            }
+
+            const renders = renderObjectArray.map(async (renderObject, index) => {
+              return new Promise(async (resolve) => {
+                drawElement(
+                  edition.layer.ctx,
+                  renderObject,
+                  index,
+                  layerConfigurations[layerConfigIndex].layersOrder.length
+                );
+
+                if (gif.export) {
+                  hashlipsGiffer.add();
+                }
+
+                resolve();
+              });
+            });
+
+            await Promise.all(renders);
+
+            if (gif.export) {
+              hashlipsGiffer.stop();
+            }
+
+            addMetadata(edition.dna, edition.abstractedIndex);
+
+            return Promise.allSettled([
+              saveImage(edition.layer.canvas, edition.abstractedIndex),
+              saveMetaDataSingleFile(edition.abstractedIndex),
+            ])
+            .then(() => {
+              console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
+              const end_ts = performance.now();
+              console.debug(
+                `> Created edition: #`, edition.abstractedIndex, ` DNA (hash): ${edition.dnaHash}\n`, 
+                ((end_ts - start_ts) / 1000).toFixed(2), `sec\n`,
+              );
+            })
+            .catch(e => console.warn(`> [error]`, e));
           });
-
-          if (gif.export) {
-            hashlipsGiffer.stop();
+        } else {
+          console.warn("DNA exists!");
+          failedCount++;
+          if (failedCount >= uniqueDnaTorrance) {
+            console.warn(
+              `> You need more layers or elements to grow your edition to`, layerConfigurations[layerConfigIndex].growEditionSizeTo, `artworks!`
+            );
+            process.exit(1);
           }
-
-          console.debug(`> Editions left to create (${abstractedIndexes.length}):`, abstractedIndexes);
-          
-          saveImage(abstractedIndexes[0]);
-          addMetadata(newDna, abstractedIndexes[0]);
-          saveMetaDataSingleFile(abstractedIndexes[0]);
-
-          const dna = sha1(newDna);
-          const end_ts = performance.now();
-          console.debug(
-            `> Created edition: #${abstractedIndexes[0]}, DNA (hash): ${dna}\n`, 
-            `  ${((end_ts - start_ts) / 1000 / 60).toFixed(2)}mm\n`,
-          );
-        });
-        dnaList.add(filterDNAOptions(newDna));
-        editionCount++;
-        abstractedIndexes.shift();
-
-      } else {
-        console.warn("DNA exists!");
-        failedCount++;
-        if (failedCount >= uniqueDnaTorrance) {
-          console.warn(
-            `> You need more layers or elements to grow your edition to ${layerConfigurations[layerConfigIndex].growEditionSizeTo} artworks!`
-          );
-          process.exit(1);
         }
-      }
-    }
+      });
+    });
+
+    await Promise.allSettled(ops);
+    await queue.onIdle();
 
     layerConfigIndex++;
   }
   writeMetaData(JSON.stringify(metadataList, null, 2));
 };
 
-module.exports = { startCreating, buildSetup, getElements };
+module.exports = { build, buildSetup, getElements };
