@@ -1,16 +1,16 @@
 const basePath = process.cwd();
-const { NETWORK } = require(`${basePath}/constants/network.js`);
 const fs = require("fs");
 const sha1 = require(`${basePath}/node_modules/sha1`);
 const { performance } = require('perf_hooks');
 const PQueue = require('p-queue').default;
 
 const workerFarm = require('worker-farm');
+const cpus = require('os').cpus().length;
 const FARM_OPTIONS = {
   autoStart: true,
-  maxConcurrentWorkers: require('os').cpus().length,
+  maxConcurrentWorkers: cpus,
   maxCallsPerWorker: Infinity,
-  maxConcurrentCallsPerWorker: 10,
+  maxConcurrentCallsPerWorker: 2,
   // maxConcurrentCallsPerWorker: Infinity,
   maxRetries: Infinity,
   workerOptions: {
@@ -32,6 +32,7 @@ const worker = workerFarm(FARM_OPTIONS, require.resolve('./worker'));
 
 const buildDir = `${basePath}/build`;
 const layersDir = `${basePath}/layers`;
+const { NETWORK } = require(`${basePath}/constants/network.js`);
 const {
   uniqueDnaTorrance,
   layerConfigurations,
@@ -219,11 +220,11 @@ const createDna = (_layers) => {
   return randNum.join(DNA_DELIMITER);
 };
 
-const writeMetaData = (_data) => {
+const writeMetadata = (_data) => {
   fs.writeFileSync(`${buildDir}/json/_metadata.json`, _data);
 };
 
-function shuffle(array) {
+const shuffle = (array) => {
   let currentIndex = array.length, randomIndex;
   while (currentIndex != 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
@@ -234,7 +235,7 @@ function shuffle(array) {
     ];
   }
   return array;
-}
+};
 
 const generateIndexes = () => {
   const abstractedIndexes = [];
@@ -254,15 +255,16 @@ const generateIndexes = () => {
 };
 
 const build = async () => {
+  const start_ts = performance.now();
   let layerConfigIndex = 0;
   let editionCount = 1;
   let failedCount = 0;
   
   const abstractedIndexes = generateIndexes();
-  console.debug(`> Creating`, abstractedIndexes.length, `Editions:`, abstractedIndexes);
+  console.debug(`> Creating`, abstractedIndexes.length, `Editions:`, abstractedIndexes, `Workers:`, FARM_OPTIONS.maxConcurrentWorkers);
 
   const queue = new PQueue({
-    concurrency: FARM_OPTIONS.maxConcurrentCallsPerWorker * 2,
+    concurrency: (FARM_OPTIONS.maxConcurrentWorkers * FARM_OPTIONS.maxConcurrentCallsPerWorker) * 2,
     autoStart: true,
   });
 
@@ -299,7 +301,6 @@ const build = async () => {
         return new Promise((resolve) => {
           
           const onBuild = (result, err) => {
-            console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
             if (err) {
               console.error(`> [onbuild] error`, err);
               failedCount++;
@@ -317,7 +318,7 @@ const build = async () => {
               resolve();
             }
           };
-          console.debug(`> dispatching to worker`);
+          console.debug(`> dispatching`, idx, `to worker`, `pending:`, queue.pending);
           worker(edition, onBuild.bind(null));
 
         });
@@ -327,10 +328,21 @@ const build = async () => {
     await Promise.allSettled(ops);
     await queue.onIdle();
     layerConfigIndex++;
+    console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
   }
 
-  console.debug(`> Build complete..`);
-  writeMetaData(JSON.stringify(metadataList, null, 2));
+  console.debug(``);
+  console.debug(`> Writing metadataList..`);
+  writeMetadata(JSON.stringify(metadataList, null, 2));
+
+  const end_ts = performance.now();
+  console.debug(
+    `>`, `Build complete..`,
+    `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
+  );
+  workerFarm.end(worker, () => {
+    process.exit(0);
+  });
 };
 
 module.exports = { build, buildSetup, getElements };

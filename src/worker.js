@@ -1,12 +1,11 @@
 const basePath = process.cwd();
-const { NETWORK } = require(`${basePath}/constants/network.js`);
 const fs_promises = require("fs").promises;
 const sha1 = require(`${basePath}/node_modules/sha1`);
 const { createCanvas, loadImage } = require(`${basePath}/node_modules/canvas`);
 const { performance } = require('perf_hooks');
-const PQueue = require('p-queue').default;
 
 const buildDir = `${basePath}/build`;
+const { NETWORK } = require(`${basePath}/constants/network.js`);
 const {
   format,
   baseUri,
@@ -20,40 +19,26 @@ const {
   gif,
 } = require(`${basePath}/src/config.js`);
 
-const generate = () => {
-  const canvas = createCanvas(format.width, format.height);
-  const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = format.smoothing;
-  return { canvas, ctx };
-};
 
-const saveImage = async (canvas, _editionCount) => {
+const writeImage = async (canvas, edition) => {
   return fs_promises.writeFile(
-    `${buildDir}/images/${_editionCount}.png`,
+    `${buildDir}/images/${edition}.png`,
     canvas.toBuffer("image/png")
   );
 };
 
-const genColor = () => {
-  let hue = Math.floor(Math.random() * 360);
-  let pastel = `hsl(${hue}, 100%, ${background.brightness})`;
-  return pastel;
+const writeMetadata = async (edition, metadata) => {
+  console.debug(
+    `> Writing metadata for`, edition, `: ${JSON.stringify(metadata, null, 2)}`
+  );
+  return fs_promises.writeFile(
+    `${buildDir}/json/${edition}.json`,
+    JSON.stringify(metadata, null, 2),
+    'utf8'
+  );
 };
 
-const drawBackground = (ctx) => {
-  ctx.fillStyle = background.static ? background.default : genColor();
-  ctx.fillRect(0, 0, format.width, format.height);
-};
-
-const addText = (ctx, _sig, x, y, size) => {
-  ctx.fillStyle = text.color;
-  ctx.font = `${text.weight} ${size}pt ${text.family}`;
-  ctx.textBaseline = text.baseline;
-  ctx.textAlign = text.align;
-  ctx.fillText(_sig, x, y);
-};
-
-const addMetadata = (_dna, _edition, attrs) => {
+const buildMetadata = (_dna, _edition, attrs) => {
   const dateTime = Date.now();
   let metadata = {
     name: `${namePrefix} #${_edition}`,
@@ -95,62 +80,80 @@ const addMetadata = (_dna, _edition, attrs) => {
   return metadata;
 };
 
-const loadLayerImg = async (_layer) => {
+const loadLayerImg = async (layer) => {
   try {
     return new Promise(async (resolve) => {
-      const image = await loadImage(`${_layer.selectedElement.path}`);
-      resolve({ layer: _layer, loadedImage: image });
+      const image = await loadImage(`${layer.selectedElement.path}`);
+      resolve({ layer, loadedImage: image });
     });
   } catch (error) {
-    console.error("Error loading image:", _layer.selectedElement.path, error);
+    console.error("Error loading image:", layer.selectedElement.path, error);
   }
 };
 
-const drawElement = (ctx, _renderObject, _index) => {
-  const start = performance.now();
-  ctx.globalAlpha = _renderObject.layer.opacity;
-  ctx.globalCompositeOperation = _renderObject.layer.blend;
+const generate = () => {
+  const canvas = createCanvas(format.width, format.height);
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = format.smoothing;
+  return { canvas, ctx };
+};
+
+const genColor = () => {
+  let hue = Math.floor(Math.random() * 360);
+  let pastel = `hsl(${hue}, 100%, ${background.brightness})`;
+  return pastel;
+};
+
+const drawBackground = (ctx) => {
+  ctx.fillStyle = background.static ? background.default : genColor();
+  ctx.fillRect(0, 0, format.width, format.height);
+};
+
+const addText = (ctx, _sig, x, y, size) => {
+  ctx.fillStyle = text.color;
+  ctx.font = `${text.weight} ${size}pt ${text.family}`;
+  ctx.textBaseline = text.baseline;
+  ctx.textAlign = text.align;
+  ctx.fillText(_sig, x, y);
+};
+
+const drawElement = async (ctx, renderObject, index) => {
+  return new Promise(async (resolve) => {
+    const s = performance.now();
+    ctx.globalAlpha = renderObject.layer.opacity;
+    ctx.globalCompositeOperation = renderObject.layer.blend;
+    
+    if (text.only) {
+      console.debug(`> Drawing text to canvas..`);
+      addText(
+        ctx,
+        `${renderObject.layer.name}${text.spacer}${renderObject.layer.selectedElement.name}`,
+        text.xGap,
+        text.yGap * (index + 1),
+        text.size
+      );
+    }
+    else {
+      // console.debug(`> Drawing element to canvas..`);
+      ctx.drawImage(
+        renderObject.loadedImage,
+        0,
+        0,
+        format.width,
+        format.height
+      );
+    }
   
-  if (text.only) {
-    console.debug(`> Drawing text to canvas..`);
-    addText(
-      ctx,
-      `${_renderObject.layer.name}${text.spacer}${_renderObject.layer.selectedElement.name}`,
-      text.xGap,
-      text.yGap * (_index + 1),
-      text.size
-    );
-  }
-  else {
-    // console.debug(`> Drawing element to canvas..`);
-    ctx.drawImage(
-      _renderObject.loadedImage,
-      0,
-      0,
-      format.width,
-      format.height
-    );
-  }
-
-  const end = performance.now();
-  console.debug(`> drawElement`, ((end - start) / 1000).toFixed(2), `sec`);
-};
-
-const saveMetaDataSingleFile = async (_editionCount, metadata) => {
-  console.debug(
-    `> Writing metadata for`, _editionCount, `: ${JSON.stringify(metadata, null, 2)}`
-  );
-  return fs_promises.writeFile(
-    `${buildDir}/json/${_editionCount}.json`,
-    JSON.stringify(metadata, null, 2),
-    'utf8'
-  );
+    const e = performance.now();
+    console.debug(`> drawElement`, index, parseFloat(((e - s) / 1000).toFixed(2)), `sec`);
+    resolve();
+  });
 };
 
 const build = async (edition, callback) => {
   console.debug(`> [build-worker]`, edition);
   const start_ts = performance.now();
-  const elements = edition.layers.map((layer) => loadLayerImg(layer));
+  const elements = edition.layers.map(layer => loadLayerImg(layer));
   edition.layer = generate();
 
   return Promise.all(elements).then(async (renderObjects, idx) => {
@@ -175,42 +178,37 @@ const build = async (edition, callback) => {
       drawBackground(edition.layer.ctx);
     }
 
-    const attrs = new Array(renderObjects.length);
-    renderObjects.forEach((render, index) => {
-      attrs[index] = {
+    const attrs = renderObjects.map(render => {
+      return {
         trait_type: render.layer.name,
         value: render.layer.selectedElement.name,
       };
     });
-    const metadata = addMetadata(edition.dna, edition.abstractedIndex, attrs);
+    const metadata = buildMetadata(edition.dna, edition.abstractedIndex, attrs);
 
     const renders = renderObjects.map(async (renderObject, index) => {
-      return new Promise(async (resolve) => {
-        drawElement(
-          edition.layer.ctx,
-          renderObject,
-          index,
-        );
-        // if (gif.export) hashlipsGiffer.add();
-        resolve();
-      });
+      // if (gif.export) hashlipsGiffer.add();
+      return drawElement(
+        edition.layer.ctx,
+        renderObject,
+        index,
+      );
     });
-
-    await Promise.all(renders);
 
     // if (gif.export) {
     //   hashlipsGiffer.stop();
     // }
 
     return Promise.allSettled([
-      saveImage(edition.layer.canvas, edition.abstractedIndex),
-      saveMetaDataSingleFile(edition.abstractedIndex, metadata),
+      ...renders,
+      writeImage(edition.layer.canvas, edition.abstractedIndex),
+      writeMetadata(edition.abstractedIndex, metadata),
     ])
     .then(() => {
       const end_ts = performance.now();
       console.debug(
-        `>`, `Created edition: #`, edition.abstractedIndex, ` DNA (hash): ${edition.dnaHash}\n`, 
-        `>`, ((end_ts - start_ts) / 1000).toFixed(2), `sec\n`,
+        `>`, `Created edition: #`, edition.abstractedIndex, ` DNA (hash): ${edition.dnaHash}`, 
+        `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
       );
       callback({
         attrs,
