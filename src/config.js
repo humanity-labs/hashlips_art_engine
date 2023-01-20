@@ -23,59 +23,8 @@ const solanaMetadata = {
 // if network is solana, then the collection starts from 0 automatically
 const layerConfigurations = [
   /**
-   * Red No EYEWEAR, No HAT
+   * Red Special
    */
-  {
-    growEditionSizeTo: 25,
-    layersOrder: [
-      {
-        name: "Background Red",
-        options: {
-          displayName: "Background",
-        }
-      },
-      {
-        name: "Skin Red",
-        options: {
-          displayName: "Skin",
-        }
-      },
-      {
-        name: "Mouths Red",
-        options: {
-          displayName: "Mouth",
-        }
-      },
-      // EYES
-      {
-        name: "Eyes Red Eyelid Bottom",
-        options: {
-          displayName: "Eyes",
-        }
-      },
-      // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
-      // EYEWEAR
-      {
-        name: "Clothes Red",
-        options: {
-          displayName: "Clothes",
-        }
-      },
-      // HATS
-      // {
-      //   name: "Hats Red",
-      //   options: {
-      //     displayName: "Hats",
-      //   }
-      // },
-    ],
-  },
   {
     growEditionSizeTo: 50,
     layersOrder: [
@@ -92,88 +41,37 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red No Eyelid Bottom",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
-      // EYEWEAR
-      {
-        name: "Clothes Red",
-        options: {
-          displayName: "Clothes",
-        }
-      },
-      // HATS
       // {
-      //   name: "Hats Red",
+      //   name: "Brows Red",
       //   options: {
-      //     displayName: "Hats",
+      //     displayName: "Brows",
       //   }
       // },
-    ],
-  },
-  {
-    growEditionSizeTo: 75,
-    layersOrder: [
-      {
-        name: "Background Red",
-        options: {
-          displayName: "Background",
-        }
-      },
-      {
-        name: "Skin Red",
-        options: {
-          displayName: "Skin",
-        }
-      },
-      {
-        name: "Mouths Red",
-        options: {
-          displayName: "Mouth",
-        }
-      },
-      // EYES
-      {
-        name: "Eyes Red Almost Closed",
-        options: {
-          displayName: "Eyes",
-        }
-      },
-      // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
       // EYEWEAR
       {
-        name: "Clothes Red",
+        name: "RED SPECIAL CLOTHES",
         options: {
           displayName: "Clothes",
         }
       },
       // HATS
       // {
-      //   name: "Hats Red",
+      //   name: "RED SPECIAL HAT",
       //   options: {
-      //     displayName: "Hats",
+      //     displayName: "Hat",
       //   }
       // },
     ],
@@ -194,26 +92,32 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red No Eyelid Bottom",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
       // EYEWEAR
+      // {
+      //   name: "RED SPECIAL CLOTHES",
+      //   options: {
+      //     displayName: "Clothes",
+      //   }
+      // },
       {
         name: "Clothes Red",
         options: {
@@ -221,20 +125,16 @@ const layerConfigurations = [
         }
       },
       // HATS
-      // {
-      //   name: "Hats Red",
-      //   options: {
-      //     displayName: "Hats",
-      //   }
-      // },
+      {
+        name: "RED SPECIAL HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
     ],
   },
-
-  /**
-   * Red w EYEWEAR, No HAT
-   */
   {
-    growEditionSizeTo: 125,
+    growEditionSizeTo: 110,
     layersOrder: [
       {
         name: "Background Red",
@@ -249,7 +149,7 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
@@ -262,34 +162,38 @@ const layerConfigurations = [
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
       // EYEWEAR
-      {
-        name: "Eyewear Red",
-        options: {
-          displayName: "Eyewear",
-        }
-      },
       {
         name: "Clothes Red",
         options: {
           displayName: "Clothes",
         }
       },
+      {
+        name: "RED SPECIAL NECKWEAR",
+        options: {
+          displayName: "Neckwear",
+        }
+      },
       // HATS
-      // {
-      //   name: "Hats Red",
-      //   options: {
-      //     displayName: "Hats",
-      //   }
-      // },
+      {
+        name: "RED SPECIAL HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
     ],
   },
+
+  /**
+   * Red No EYEWEAR, No HAT
+   */
   {
     growEditionSizeTo: 150,
     layersOrder: [
@@ -306,32 +210,26 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red No Eyelid Bottom",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
       // EYEWEAR
-      {
-        name: "Eyewear Red",
-        options: {
-          displayName: "Eyewear",
-        }
-      },
       {
         name: "Clothes Red",
         options: {
@@ -340,9 +238,9 @@ const layerConfigurations = [
       },
       // HATS
       // {
-      //   name: "Hats Red",
+      //   name: "Hat Red",
       //   options: {
-      //     displayName: "Hats",
+      //     displayName: "Hat",
       //   }
       // },
     ],
@@ -363,32 +261,26 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red Almost Closed",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
       // EYEWEAR
-      {
-        name: "Eyewear Red",
-        options: {
-          displayName: "Eyewear",
-        }
-      },
       {
         name: "Clothes Red",
         options: {
@@ -397,9 +289,9 @@ const layerConfigurations = [
       },
       // HATS
       // {
-      //   name: "Hats Red",
+      //   name: "Hat Red",
       //   options: {
-      //     displayName: "Hats",
+      //     displayName: "Hat",
       //   }
       // },
     ],
@@ -420,32 +312,26 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red No Eyelid Bottom",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
       // EYEWEAR
-      {
-        name: "Eyewear Red",
-        options: {
-          displayName: "Eyewear",
-        }
-      },
       {
         name: "Clothes Red",
         options: {
@@ -454,17 +340,13 @@ const layerConfigurations = [
       },
       // HATS
       // {
-      //   name: "Hats Red",
+      //   name: "Hat Red",
       //   options: {
-      //     displayName: "Hats",
+      //     displayName: "Hat",
       //   }
       // },
     ],
   },
-
-  /**
-   * Red No EYEWEAR, w HAT
-   */
   {
     growEditionSizeTo: 225,
     layersOrder: [
@@ -481,7 +363,7 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
@@ -494,19 +376,13 @@ const layerConfigurations = [
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
-      // EYEWEAR
       // {
-      //   name: "Eyewear Red",
+      //   name: "Brows Red",
       //   options: {
-      //     displayName: "Eyewear",
+      //     displayName: "Brows",
       //   }
       // },
+      // EYEWEAR
       {
         name: "Clothes Red",
         options: {
@@ -514,14 +390,18 @@ const layerConfigurations = [
         }
       },
       // HATS
-      {
-        name: "Hats Red",
-        options: {
-          displayName: "Hats",
-        }
-      },
+      // {
+      //   name: "Hat Red",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
     ],
   },
+
+  /**
+   * Red w EYEWEAR, No HAT
+   */
   {
     growEditionSizeTo: 250,
     layersOrder: [
@@ -538,32 +418,32 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red No Eyelid Bottom",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
-      // EYEWEAR
       // {
-      //   name: "Eyewear Red",
+      //   name: "Brows Red",
       //   options: {
-      //     displayName: "Eyewear",
+      //     displayName: "Brows",
       //   }
       // },
+      // EYEWEAR
+      {
+        name: "Eyewear Red",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
       {
         name: "Clothes Red",
         options: {
@@ -571,12 +451,12 @@ const layerConfigurations = [
         }
       },
       // HATS
-      {
-        name: "Hats Red",
-        options: {
-          displayName: "Hats",
-        }
-      },
+      // {
+      //   name: "Hat Red",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
     ],
   },
   {
@@ -595,32 +475,32 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red Almost Closed",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
-      {
-        name: "Brows Red",
-        options: {
-          displayName: "Brows",
-        }
-      },
-      // EYEWEAR
       // {
-      //   name: "Eyewear Red",
+      //   name: "Brows Red",
       //   options: {
-      //     displayName: "Eyewear",
+      //     displayName: "Brows",
       //   }
       // },
+      // EYEWEAR
+      {
+        name: "Eyewear Red",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
       {
         name: "Clothes Red",
         options: {
@@ -628,12 +508,12 @@ const layerConfigurations = [
         }
       },
       // HATS
-      {
-        name: "Hats Red",
-        options: {
-          displayName: "Hats",
-        }
-      },
+      // {
+      //   name: "Hat Red",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
     ],
   },
   {
@@ -652,25 +532,143 @@ const layerConfigurations = [
         }
       },
       {
-        name: "Mouths Red",
+        name: "Mouth Red",
         options: {
           displayName: "Mouth",
         }
       },
       // EYES
       {
-        name: "Eyes Red No Eyelid Bottom",
+        name: "Eyes Red Eyelid Bottom",
         options: {
           displayName: "Eyes",
         }
       },
       // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
       {
-        name: "Brows Red",
+        name: "Eyewear Red",
         options: {
-          displayName: "Brows",
+          displayName: "Eyewear",
         }
       },
+      {
+        name: "Clothes Red",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "Hat Red",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 325,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "Mouth Red",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "Eyes Red Eyelid Bottom",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "Eyewear Red",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "Clothes Red",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "Hat Red",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+
+  /**
+   * Red No EYEWEAR, w HAT
+   */
+  {
+    growEditionSizeTo: 350,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "Mouth Red",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "Eyes Red Eyelid Bottom",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
       // EYEWEAR
       // {
       //   name: "Eyewear Red",
@@ -686,9 +684,180 @@ const layerConfigurations = [
       },
       // HATS
       {
-        name: "Hats Red",
+        name: "Hat Red",
         options: {
-          displayName: "Hats",
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 375,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "Mouth Red",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "Eyes Red Eyelid Bottom",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "Eyewear Red",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "Clothes Red",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "Hat Red",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 400,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "Mouth Red",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "Eyes Red Eyelid Bottom",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "Eyewear Red",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "Clothes Red",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "Hat Red",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 425,
+    layersOrder: [
+      {
+        name: "Background Red",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "Skin Red",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "Mouth Red",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "Eyes Red Eyelid Bottom",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "Eyewear Red",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "Clothes Red",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "Hat Red",
+        options: {
+          displayName: "Hat",
         }
       },
     ],

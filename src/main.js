@@ -1,5 +1,5 @@
 const basePath = process.cwd();
-const fs = require("fs");
+const fs = require('fs');
 const sha1 = require(`${basePath}/node_modules/sha1`);
 const { performance } = require('perf_hooks');
 const PQueue = require('p-queue').default;
@@ -22,9 +22,9 @@ const FARM_OPTIONS = {
       spawnfile: child.spawnfile,
       killed: child.killed,
       connected: child.connected,
-      channel: child.channel,
       send: child.send,
       disconnect: child.disconnect,
+      // channel: child.channel,
     });
   },
 };
@@ -43,9 +43,6 @@ const {
   gif,
 } = require(`${basePath}/src/config.js`);
 
-const metadataList = [];
-const attributesList = [];
-const dnaList = new Set();
 const DNA_DELIMITER = `-`;
 
 const rm = (path) => {
@@ -100,12 +97,6 @@ const getRarityWeight = (_str) => {
     nameWithoutWeight = 1;
   }
   return nameWithoutWeight;
-};
-
-const cleanDna = (_str) => {
-  const withoutOptions = removeQueryStrings(_str);
-  const dna = Number(withoutOptions.split(":").shift());
-  return dna;
 };
 
 const cleanName = (_str) => {
@@ -171,16 +162,6 @@ const layersSetup = (layersOrder) => {
   return layers;
 };
 
-const addMetadata = (metadata) => {
-  metadataList.push(metadata);
-};
-
-const addAttributes = (attrs) => {
-  attrs.forEach(attr => {
-    attributesList.push(attr);
-  });
-};
-
 const constructLayerToDna = (_dna = "", _layers = []) => {
   return _layers.map((layer, index) => {
     const element = layer.elements.find(
@@ -235,9 +216,9 @@ const removeQueryStrings = (_dna) => {
   return _dna.replace(query, "");
 };
 
-const isDnaUnique = (_DnaList = new Set(), _dna = "") => {
+const isDnaUnique = (_dnas = new Set(), _dna = "") => {
   const _filteredDNA = filterDNAOptions(_dna);
-  return !_DnaList.has(_filteredDNA);
+  return !_dnas.has(_filteredDNA);
 };
 
 const createDna = (_layers) => {
@@ -264,8 +245,14 @@ const createDna = (_layers) => {
   return randNum.join(DNA_DELIMITER);
 };
 
+const cleanDna = (_str) => {
+  const withoutOptions = removeQueryStrings(_str);
+  const dna = Number(withoutOptions.split(":").shift());
+  return dna;
+};
+
 const writeMetadata = (_data) => {
-  fs.writeFileSync(`${buildDir}/metadata.json`, _data);
+  fs.writeFileSync(`${buildDir}/metadata.json`, JSON.stringify(_data, null, 2));
 };
 
 const shuffle = (array) => {
@@ -303,6 +290,9 @@ const build = async () => {
   let layerConfigIndex = 0;
   let editionCount = 1;
   let failedCount = 0;
+
+  const metadatas = [];
+  const dnas = new Set();
   
   const abstractedIndexes = generateIndexes();
   const total = abstractedIndexes.length;
@@ -312,6 +302,7 @@ const build = async () => {
     concurrency: (FARM_OPTIONS.maxConcurrentWorkers * FARM_OPTIONS.maxConcurrentCallsPerWorker) * 1,
     autoStart: true,
   });
+  const measures = [];
 
   while (layerConfigIndex < layerConfigurations.length) {
     const layerConfig = layerConfigurations[layerConfigIndex];
@@ -334,33 +325,31 @@ const build = async () => {
       });
 
       // TODO: recursively create until DNA is unique in set..
-      dnaList.add(filterDNAOptions(dna));
+      // dnas.add(filterDNAOptions(dna));
 
       editionCount++;
       abstractedIndexes.shift();
     }
 
-    const measures = [];
-    
     // dispatch build jobs to worker threads..
-    editions.map(async (edition, idx) => {
+    editions.map(async (edition) => {
       return queue.add(async () => {
-        return new Promise(async (resolve) => {
+        return new Promise(resolve => {
           const start = performance.now();
 
           const onBuild = (result, err) => {
             const end = performance.now();
-            
             const measure = {
               sum: 0,
               avg: 0,
               runtime: (end - start),
               current: edition.index,
-              remaining: total - edition.index,
+              remaining: (total - edition.index) > 0 ? (total - edition.index) : 1,
               remainingTime: 0,
             };
+            measure.sum += measure.runtime;
             measures.forEach(_ => measure.sum += _.runtime);
-            measure.avg = measure.sum / measures.length;
+            measure.avg = measure.sum / (measures.length + 1);
             measure.remainingTime = (measure.remaining * measure.avg) / FARM_OPTIONS.maxConcurrentWorkers;
             measures.push(measure);
 
@@ -384,13 +373,9 @@ const build = async () => {
                 `- remaining:`, measure.remaining, `editions`, `\n`,
                 `- estimated:`, parseFloat((measure.remainingTime / 1000 / 60).toFixed(2)), `min`, `\n`,
               );
-              addAttributes(result.attrs);
-              addMetadata(result.metadata);
+              metadatas.push(result.metadata);
             }
-
-            process.nextTick(() => {
-              resolve();
-            });
+            process.nextTick(resolve);
           };
 
           console.debug(`> dispatching`, edition.index, `to worker`, `pending:`, queue.pending);
@@ -406,8 +391,8 @@ const build = async () => {
   }
 
   console.debug(``);
-  console.debug(`> Writing metadataList..`);
-  writeMetadata(JSON.stringify(metadataList, null, 2));
+  console.debug(`> Writing metadatas..`);
+  writeMetadata(metadatas);
 
   const end_ts = performance.now();
   console.debug(
