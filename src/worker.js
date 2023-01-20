@@ -1,8 +1,9 @@
 const basePath = process.cwd();
 const fs_promises = require("fs").promises;
-const sha1 = require(`${basePath}/node_modules/sha1`);
-const { createCanvas, loadImage } = require(`${basePath}/node_modules/canvas`);
+const { createCanvas, loadImage } = require(`canvas`);
 const { performance } = require('perf_hooks');
+const log = require(`${basePath}/node_modules/npmlog`);
+log.enableColor();
 
 const buildDir = `${basePath}/build`;
 const { NETWORK } = require(`${basePath}/constants/network.js`);
@@ -19,34 +20,42 @@ const {
   gif,
 } = require(`${basePath}/src/config.js`);
 
-
-const writeImage = async (canvas, edition) => {
-  return fs_promises.writeFile(
-    `${buildDir}/images/${edition}.png`,
-    canvas.toBuffer("image/png")
-  );
+// PNG-encoded, zlib compression level 3 for faster compression,
+// but larger files, no filtering
+const render_opts = {
+  compressionLevel: 3,
+  alpha: false,
 };
 
-const writeMetadata = async (edition, metadata) => {
-  console.debug(
-    `> Writing metadata for`, edition, `: ${JSON.stringify(metadata, null, 2)}`
-  );
+const writeImage = async (canvas, edition) => {
+  return new Promise(resolve => {
+    canvas.toBuffer((_, buffer) => {
+      fs_promises
+        .writeFile(`${buildDir}/images/${edition}.png`, buffer)
+        .then(() => resolve());
+    }, 'image/png', { ...render_opts, filters: canvas.PNG_FILTER_NONE });
+  });
+};
+
+const writeMetadata = async (metadata, edition) => {
+  // console.debug(
+  //   `> Writing metadata for`, edition, `: ${JSON.stringify(metadata, null, 2)}`
+  // );
   return fs_promises.writeFile(
     `${buildDir}/json/${edition}.json`,
     JSON.stringify(metadata, null, 2),
-    'utf8'
+    'utf8',
   );
 };
 
-const buildMetadata = (_dna, _edition, attrs) => {
-  const dateTime = Date.now();
+const buildMetadata = (_dna, dnaHash, edition, attrs) => {
   let metadata = {
-    name: `${namePrefix} #${_edition}`,
+    name: `${namePrefix} #${edition}`,
     description: description,
-    image: `${baseUri}/${_edition}.png`,
-    dna: sha1(_dna),
-    edition: _edition,
-    date: dateTime,
+    image: `${baseUri}/${edition}.png`,
+    dna: dnaHash,
+    edition,
+    date: Date.now(),
     ...extraMetadata,
     attributes: attrs,
     // compiler: "HashLips Art Engine",
@@ -59,16 +68,16 @@ const buildMetadata = (_dna, _edition, attrs) => {
       description: metadata.description,
       // Added metadata for solana
       seller_fee_basis_points: solanaMetadata.seller_fee_basis_points,
-      image: `${_edition}.png`,
+      image: `${edition}.png`,
       // Added metadata for solana
       external_url: solanaMetadata.external_url,
-      edition: _edition,
+      edition,
       ...extraMetadata,
       attributes: metadata.attributes,
       properties: {
         files: [
           {
-            uri: `${_edition}.png`,
+            uri: `${edition}.png`,
             type: "image/png",
           },
         ],
@@ -80,142 +89,160 @@ const buildMetadata = (_dna, _edition, attrs) => {
   return metadata;
 };
 
-const loadLayerImg = async (layer) => {
-  try {
-    return new Promise(async (resolve) => {
-      const image = await loadImage(`${layer.selectedElement.path}`);
-      resolve({ layer, loadedImage: image });
+const CACHE = [];
+
+const loadLayerImage = async (layer) => {
+  const _cache = CACHE.find(_ => _.key === layer.element.path);
+  if (_cache) return Promise.resolve({ layer, image: _cache.image });
+
+  return loadImage(`${layer.element.path}`)
+  .then(image => {
+    CACHE.push({
+      key: layer.element.path,
+      image,
     });
-  } catch (error) {
-    console.error("Error loading image:", layer.selectedElement.path, error);
-  }
+    return Promise.resolve({ layer, image });
+  })
+  .catch(err => console.error(`Error loading image:`, layer.element.path, err));
 };
 
 const generate = () => {
   const canvas = createCanvas(format.width, format.height);
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d', { alpha: false });
   ctx.imageSmoothingEnabled = format.smoothing;
+  // ctx.imageSmoothingQuality = "high";
   return { canvas, ctx };
 };
 
-const genColor = () => {
+/*const genColor = () => {
   let hue = Math.floor(Math.random() * 360);
   let pastel = `hsl(${hue}, 100%, ${background.brightness})`;
   return pastel;
-};
+};*/
 
-const drawBackground = (ctx) => {
+/*const drawBackground = (ctx) => {
   ctx.fillStyle = background.static ? background.default : genColor();
   ctx.fillRect(0, 0, format.width, format.height);
-};
+};*/
 
-const addText = (ctx, _sig, x, y, size) => {
+/*const addText = (ctx, _sig, x, y, size) => {
   ctx.fillStyle = text.color;
   ctx.font = `${text.weight} ${size}pt ${text.family}`;
   ctx.textBaseline = text.baseline;
   ctx.textAlign = text.align;
   ctx.fillText(_sig, x, y);
-};
+};*/
 
 const drawElement = async (ctx, renderObject, index) => {
   return new Promise(async (resolve) => {
-    const s = performance.now();
+    // const s = performance.now();
     ctx.globalAlpha = renderObject.layer.opacity;
     ctx.globalCompositeOperation = renderObject.layer.blend;
     
-    if (text.only) {
+    /*if (text?.only) {
       console.debug(`> Drawing text to canvas..`);
       addText(
         ctx,
-        `${renderObject.layer.name}${text.spacer}${renderObject.layer.selectedElement.name}`,
+        `${renderObject.layer.name}${text.spacer}${renderObject.layer.element.name}`,
         text.xGap,
         text.yGap * (index + 1),
         text.size
       );
-    }
-    else {
-      // console.debug(`> Drawing element to canvas..`);
-      ctx.drawImage(
-        renderObject.loadedImage,
-        0,
-        0,
-        format.width,
-        format.height
-      );
-    }
+      return resolve();
+    }*/
+
+    // console.debug(`> Drawing element to canvas..`);
+    ctx.drawImage(
+      renderObject.image, 0, 0, format.width, format.height
+    );
   
-    const e = performance.now();
-    console.debug(`> drawElement`, index, parseFloat(((e - s) / 1000).toFixed(2)), `sec`);
+    // const e = performance.now();
+    // console.debug(`> drawElement`, index, parseFloat(((e - s) / 1000).toFixed(2)), `sec`);
     resolve();
   });
 };
 
+const layer = generate();
+
 const build = async (edition, callback) => {
-  console.debug(`> [build-worker]`, edition);
-  const start_ts = performance.now();
-  const elements = edition.layers.map(layer => loadLayerImg(layer));
-  edition.layer = generate();
+  // console.debug(`> [build-worker]`, edition);
+  const elements = edition.layers.map(_ => loadLayerImage(_));
+  // edition.layer = generate();
 
-  return Promise.all(elements).then(async (renderObjects, idx) => {
+  return Promise.all(elements)
+  .then(async (renderObjects, idx) => {
+    const attrs = renderObjects.map(_ => ({
+      trait_type: _.layer.name,
+      value: _.layer.element.name,
+    }));
+    const metadata = buildMetadata(
+      edition.dna,
+      edition.dnaHash,
+      edition.index,
+      attrs,
+    );
+
+    const start = performance.now();
     // console.log("> Clearing canvas");
-    // edition.layer.ctx.clearRect(0, 0, format.width, format.height);
+    layer.ctx.clearRect(0, 0, format.width, format.height);
 
-    // if (gif.export) {
-    //   console.debug(`> adding gif export..`);
-    //   hashlipsGiffer = new HashlipsGiffer(
-    //     edition.layer.canvas,
-    //     edition.layer.ctx,
-    //     `${buildDir}/gifs/${edition.abstractedIndex}.gif`,
-    //     gif.repeat,
-    //     gif.quality,
-    //     gif.delay
-    //   );
-    //   hashlipsGiffer.start();
-    // }
+    /*if (gif.export) {
+      console.debug(`> adding gif export..`);
+      hashlipsGiffer = new HashlipsGiffer(
+        layer.canvas,
+        layer.ctx,
+        `${buildDir}/gifs/${edition.index}.gif`,
+        gif.repeat,
+        gif.quality,
+        gif.delay
+      );
+      hashlipsGiffer.start();
+    }*/
 
-    if (background.generate) {
+    /*if (background?.generate) {
       console.debug(`> Generating background..`);
-      drawBackground(edition.layer.ctx);
-    }
-
-    const attrs = renderObjects.map(render => {
-      return {
-        trait_type: render.layer.name,
-        value: render.layer.selectedElement.name,
-      };
-    });
-    const metadata = buildMetadata(edition.dna, edition.abstractedIndex, attrs);
+      drawBackground(layer.ctx);
+    }*/
 
     const renders = renderObjects.map(async (renderObject, index) => {
-      // if (gif.export) hashlipsGiffer.add();
+      // if (gif?.export) hashlipsGiffer.add();
       return drawElement(
-        edition.layer.ctx,
+        layer.ctx,
         renderObject,
         index,
       );
     });
+    // if (gif?.export) hashlipsGiffer.stop();
 
-    // if (gif.export) {
-    //   hashlipsGiffer.stop();
-    // }
+    const end = performance.now();
+    console.debug(
+      `>`, `rendering:`, parseFloat(((end - start) / 1000).toFixed(2)), `sec\n`,
+    );
+
+    process.nextTick(() => {
+      console.debug(
+        `>`, `Created edition: #`, edition.index, ` DNA (hash): ${edition.dnaHash}`, 
+        // `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
+      );
+      callback({ attrs, metadata });
+    });
 
     return Promise.allSettled([
-      ...renders,
-      writeImage(edition.layer.canvas, edition.abstractedIndex),
-      writeMetadata(edition.abstractedIndex, metadata),
-    ])
-    .then(() => {
-      const end_ts = performance.now();
+      // ...renders,
+      writeImage(layer.canvas, edition.index),
+      writeMetadata(metadata, edition.index),
+    ]);
+    /*.then(() => {
+      // const end_ts = performance.now();
       console.debug(
-        `>`, `Created edition: #`, edition.abstractedIndex, ` DNA (hash): ${edition.dnaHash}`, 
-        `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
+        `>`, `Created edition: #`, edition.index, ` DNA (hash): ${edition.dnaHash}`, 
+        // `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
       );
-      callback({
-        attrs,
-        metadata,
-      });
-    })
-    .catch(e => console.warn(`> [error]`, e));
+      //callback({
+      //  attrs,
+      //  metadata,
+      //});
+    })*/
   });
 };
 

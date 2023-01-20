@@ -11,7 +11,7 @@ const {
 } = require(`${basePath}/src/config.js`);
 
 // read json data
-let rawdata = fs.readFileSync(`${basePath}/build/json/_metadata.json`);
+let rawdata = fs.readFileSync(`${basePath}/build/metadata.json`);
 let data = JSON.parse(rawdata);
 
 data.forEach((item) => {
@@ -31,7 +31,7 @@ data.forEach((item) => {
 });
 
 fs.writeFileSync(
-  `${basePath}/build/json/_metadata.json`,
+  `${basePath}/build/metadata.json`,
   JSON.stringify(data, null, 2)
 );
 

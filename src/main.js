@@ -10,7 +10,7 @@ const FARM_OPTIONS = {
   autoStart: true,
   maxConcurrentWorkers: cpus,
   maxCallsPerWorker: Infinity,
-  maxConcurrentCallsPerWorker: 2,
+  maxConcurrentCallsPerWorker: 1,
   // maxConcurrentCallsPerWorker: Infinity,
   maxRetries: Infinity,
   workerOptions: {
@@ -46,24 +46,54 @@ const {
 const metadataList = [];
 const attributesList = [];
 const dnaList = new Set();
-const DNA_DELIMITER = "-";
+const DNA_DELIMITER = `-`;
+
+const rm = (path) => {
+  if (fs.existsSync(path)) {
+    fs.rmSync(path);
+  }
+};
 
 const buildSetup = () => {
-  if (fs.existsSync(buildDir)) {
-    fs.rmdirSync(buildDir, { recursive: true });
-  }
+  if (fs.existsSync(buildDir)) fs.rmdirSync(buildDir, { recursive: true });
   fs.mkdirSync(buildDir);
   fs.mkdirSync(`${buildDir}/json`);
   fs.mkdirSync(`${buildDir}/images`);
-  if (gif.export) {
-    fs.mkdirSync(`${buildDir}/gifs`);
-  }
+  if (gif?.export) fs.mkdirSync(`${buildDir}/gifs`);
+
+  // pre-process layers to clean up & normalize filenames
+  rm(`${layersDir}/.DS_Store`);
+  const layers = fs.readdirSync(layersDir, { encoding: 'utf8' });
+  console.debug(`[pre-process] layers`, layers.length, layers);
+  layers.forEach(layer => {
+    rm(`${layersDir}/${layer}/.DS_Store`);
+    const items = fs.readdirSync(`${layersDir}/${layer}`, { encoding: 'utf8' });
+    console.debug(`[pre-process] items`, layer, items.length, items);
+    items.forEach((item, idx) => {
+      console.debug(`[pre-process]`, layer, idx, item);
+
+      const cleaned = item
+        .split('.png')[0]
+        .trim()
+        .replace(/[\{\}\-\_\[\]\+]/ig, '')
+        .replace(/\s{2,}/g, ' ')
+        .toLowerCase()
+        .split(' ')
+        .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(' ')
+        .concat('.png');
+      
+      if (cleaned !== item) {
+        fs.renameSync(`${layersDir}/${layer}/${item}`, `${layersDir}/${layer}/${cleaned}`);
+      }
+    });
+  });
 };
 
 const getRarityWeight = (_str) => {
   // todo: should find last index of `.` char and slice to end..
-  let nameWithoutExtension = _str.slice(0, -4);
-  var nameWithoutWeight = Number(
+  const nameWithoutExtension = _str.slice(0, -4);
+  let nameWithoutWeight = Number(
     nameWithoutExtension.split(rarityDelimiter).pop()
   );
   if (isNaN(nameWithoutWeight)) {
@@ -74,23 +104,38 @@ const getRarityWeight = (_str) => {
 
 const cleanDna = (_str) => {
   const withoutOptions = removeQueryStrings(_str);
-  var dna = Number(withoutOptions.split(":").shift());
+  const dna = Number(withoutOptions.split(":").shift());
   return dna;
 };
 
 const cleanName = (_str) => {
-  let nameWithoutExtension = _str.slice(0, -4);
-  var nameWithoutWeight = nameWithoutExtension.split(rarityDelimiter).shift();
+  const nameWithoutExtension = _str.slice(0, -4);
+  const nameWithoutWeight = nameWithoutExtension.split(rarityDelimiter).shift();
   return nameWithoutWeight;
 };
 
 const getElements = (path) => {
   return fs
     .readdirSync(path)
-    .filter((item) => !/(^|\/)\.[^\/\.]/g.test(item))
+    .filter(item => !/(^|\/)\.[^\/\.]/g.test(item))
     .map((i, index) => {
-      if (i.includes("-")) {
+      if (i.includes(`-`)) {
         throw new Error(`layer name can not contain dashes, please fix: ${i}`);
+      }
+      else if (i.includes(`+`)) {
+        throw new Error(`layer name can not contain plus, please fix: ${i}`);
+      }
+      else if (i.includes(`_`)) {
+        throw new Error(`layer name can not contain underscore, please fix: ${i}`);
+      }
+      else if (i.includes(`(`) || i.includes(`)`)) {
+        throw new Error(`layer name can not contain paranthesis, please fix: ${i}`);
+      }
+      else if (i.includes(`[`) || i.includes(`]`)) {
+        throw new Error(`layer name can not contain square-brace, please fix: ${i}`);
+      }
+      else if (i.includes(`{`) || i.includes(`}`)) {
+        throw new Error(`layer name can not contain curly-brace, please fix: ${i}`);
       }
       return {
         id: index,
@@ -137,18 +182,17 @@ const addAttributes = (attrs) => {
 };
 
 const constructLayerToDna = (_dna = "", _layers = []) => {
-  let mappedDnaToLayers = _layers.map((layer, index) => {
-    let selectedElement = layer.elements.find(
-      (e) => e.id == cleanDna(_dna.split(DNA_DELIMITER)[index])
+  return _layers.map((layer, index) => {
+    const element = layer.elements.find(
+      e => e.id == cleanDna(_dna.split(DNA_DELIMITER)[index])
     );
     return {
       name: layer.name,
       blend: layer.blend,
       opacity: layer.opacity,
-      selectedElement: selectedElement,
+      element,
     };
   });
-  return mappedDnaToLayers;
 };
 
 /**
@@ -198,9 +242,9 @@ const isDnaUnique = (_DnaList = new Set(), _dna = "") => {
 
 const createDna = (_layers) => {
   let randNum = [];
-  _layers.forEach((layer) => {
-    var totalWeight = 0;
-    layer.elements.forEach((element) => {
+  _layers.forEach(layer => {
+    let totalWeight = 0;
+    layer.elements.forEach(element => {
       totalWeight += element.weight;
     });
     // number between 0 - totalWeight
@@ -221,7 +265,7 @@ const createDna = (_layers) => {
 };
 
 const writeMetadata = (_data) => {
-  fs.writeFileSync(`${buildDir}/json/_metadata.json`, _data);
+  fs.writeFileSync(`${buildDir}/metadata.json`, _data);
 };
 
 const shuffle = (array) => {
@@ -261,10 +305,11 @@ const build = async () => {
   let failedCount = 0;
   
   const abstractedIndexes = generateIndexes();
-  console.debug(`> Creating`, abstractedIndexes.length, `Editions:`, abstractedIndexes, `Workers:`, FARM_OPTIONS.maxConcurrentWorkers);
+  const total = abstractedIndexes.length;
+  console.debug(`> Creating`, total, `Editions:`, abstractedIndexes, `Workers:`, FARM_OPTIONS.maxConcurrentWorkers);
 
   const queue = new PQueue({
-    concurrency: (FARM_OPTIONS.maxConcurrentWorkers * FARM_OPTIONS.maxConcurrentCallsPerWorker) * 2,
+    concurrency: (FARM_OPTIONS.maxConcurrentWorkers * FARM_OPTIONS.maxConcurrentCallsPerWorker) * 1,
     autoStart: true,
   });
 
@@ -280,7 +325,7 @@ const build = async () => {
       
       editions.push({
         edition: editionCount,
-        abstractedIndex: abstractedIndexes[0],
+        index: abstractedIndexes[0],
         dna,
         dnaHash: sha1(dna),
         layers: constructLayerToDna(dna, layers),
@@ -295,12 +340,30 @@ const build = async () => {
       abstractedIndexes.shift();
     }
 
+    const measures = [];
+    
     // dispatch build jobs to worker threads..
-    const ops = editions.map(async (edition, idx) => {
+    editions.map(async (edition, idx) => {
       return queue.add(async () => {
-        return new Promise((resolve) => {
-          
+        return new Promise(async (resolve) => {
+          const start = performance.now();
+
           const onBuild = (result, err) => {
+            const end = performance.now();
+            
+            const measure = {
+              sum: 0,
+              avg: 0,
+              runtime: (end - start),
+              current: edition.index,
+              remaining: total - edition.index,
+              remainingTime: 0,
+            };
+            measures.forEach(_ => measure.sum += _.runtime);
+            measure.avg = measure.sum / measures.length;
+            measure.remainingTime = (measure.remaining * measure.avg) / FARM_OPTIONS.maxConcurrentWorkers;
+            measures.push(measure);
+
             if (err) {
               console.error(`> [onbuild] error`, err);
               failedCount++;
@@ -312,20 +375,31 @@ const build = async () => {
               }
             }
             else {
-              console.debug(`> [onbuild] result`, result);
+              // console.debug(`> [onbuild] result`, result);
+              console.debug(
+                `> runtime:\n`, 
+                `- edition:`, measure.current, parseFloat((measure.runtime / 1000).toFixed(2)), `sec`, `\n`,
+                `- avg:`, parseFloat((measure.avg / 1000).toFixed(2)), `sec`, `\n`,
+                `- completed:`, measures.length, `editions`, `\n`,
+                `- remaining:`, measure.remaining, `editions`, `\n`,
+                `- estimated:`, parseFloat((measure.remainingTime / 1000 / 60).toFixed(2)), `min`, `\n`,
+              );
               addAttributes(result.attrs);
               addMetadata(result.metadata);
-              resolve();
             }
+
+            process.nextTick(() => {
+              resolve();
+            });
           };
-          console.debug(`> dispatching`, idx, `to worker`, `pending:`, queue.pending);
+
+          console.debug(`> dispatching`, edition.index, `to worker`, `pending:`, queue.pending);
           worker(edition, onBuild.bind(null));
 
         });
       });
     });
 
-    await Promise.allSettled(ops);
     await queue.onIdle();
     layerConfigIndex++;
     console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
@@ -338,7 +412,7 @@ const build = async () => {
   const end_ts = performance.now();
   console.debug(
     `>`, `Build complete..`,
-    `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
+    `\n>`, parseFloat(((end_ts - start_ts) / 1000 / 60).toFixed(2)), `min\n`,
   );
   workerFarm.end(worker, () => {
     process.exit(0);
