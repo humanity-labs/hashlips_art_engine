@@ -215,30 +215,23 @@ const build = async (edition, callback) => {
       `>`, `rendering:`, parseFloat(((end - start) / 1000).toFixed(2)), `sec\n`,
     );
 
-    process.nextTick(() => {
+    /*process.nextTick(() => {
       console.debug(
         `>`, `Created edition: #`, edition.index, ` DNA (hash): ${edition.dnaHash}`, 
-        // `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
+      );
+      callback({ metadata });
+    });*/
+
+    return Promise.allSettled([
+      writeImage(layer.canvas, edition.index),
+      writeMetadata(metadata, edition.index),
+    ])
+    .then(() => {
+      console.debug(
+        `>`, `Created edition: #`, edition.index, ` DNA (hash): ${edition.dnaHash}`, 
       );
       callback({ metadata });
     });
-
-    return Promise.allSettled([
-      // ...renders,
-      writeImage(layer.canvas, edition.index),
-      writeMetadata(metadata, edition.index),
-    ]);
-    /*.then(() => {
-      // const end_ts = performance.now();
-      console.debug(
-        `>`, `Created edition: #`, edition.index, ` DNA (hash): ${edition.dnaHash}`, 
-        // `\n>`, parseFloat(((end_ts - start_ts) / 1000).toFixed(2)), `sec\n`,
-      );
-      //callback({
-      //  attrs,
-      //  metadata,
-      //});
-    })*/
   });
 };
 

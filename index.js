@@ -1,7 +1,13 @@
 const basePath = process.cwd();
 const { build, buildSetup } = require(`${basePath}/src/main.js`);
 
+const resume = process.env.RESUME;
+
 (() => {
-  buildSetup();
+  if (resume) {
+    // TODO
+  } else {
+    buildSetup();
+  }
   build();
 })();

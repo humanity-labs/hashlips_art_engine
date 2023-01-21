@@ -216,33 +216,49 @@ const removeQueryStrings = (_dna) => {
   return _dna.replace(query, "");
 };
 
-const isDnaUnique = (_dnas = new Set(), _dna = "") => {
-  const _filteredDNA = filterDNAOptions(_dna);
-  return !_dnas.has(_filteredDNA);
+const isDnaUnique = (_dnas, _dna) => {
+  const _filtered_dna = filterDNAOptions(_dna);
+  return !_dnas.has(_filtered_dna);
 };
 
-const createDna = (_layers) => {
-  let randNum = [];
+const createDna = (_layers, _dnas, attempt = 0) => {
+  const random_nums = [];
+
   _layers.forEach(layer => {
+    
     let totalWeight = 0;
-    layer.elements.forEach(element => {
-      totalWeight += element.weight;
+    layer.elements.forEach(_ => {
+      totalWeight += _.weight;
     });
+
     // number between 0 - totalWeight
     let random = Math.floor(Math.random() * totalWeight);
-    for (var i = 0; i < layer.elements.length; i++) {
-      // subtract the current weight from the random weight until we reach a sub zero value.
+    for (let i = 0, t = layer.elements.length; i < t; i++) {
+      // subtract the current weight from the random weight
+      // until we reach a sub zero value.
       random -= layer.elements[i].weight;
       if (random < 0) {
-        return randNum.push(
+        return random_nums.push(
           `${layer.elements[i].id}:${layer.elements[i].filename}${
-            layer.bypassDNA ? "?bypassDNA=true" : ""
+            layer.bypassDNA ? '?bypassDNA=true' : ''
           }`
         );
       }
     }
   });
-  return randNum.join(DNA_DELIMITER);
+
+  const dna = random_nums.join(DNA_DELIMITER);
+
+  // recursively call until DNA is unique in set..
+  if (!isDnaUnique(_dnas, dna)) {
+    if (attempt > 500) {
+      console.error(`[error]`, `max attempts reached generating a unique dna..`, `increase the number of trait layers..`);
+      process.exit(1);
+    }
+    return createDna(_layers, _dnas, ++attempt);
+  } else {
+    return dna;
+  }
 };
 
 const cleanDna = (_str) => {
@@ -306,29 +322,21 @@ const build = async () => {
 
   while (layerConfigIndex < layerConfigurations.length) {
     const layerConfig = layerConfigurations[layerConfigIndex];
-    const layers = layersSetup(
-      layerConfig.layersOrder
-    );
+    const layers = layersSetup(layerConfig.layersOrder);
 
     const editions = [];
     while (editionCount <= layerConfig.growEditionSizeTo) {
-      let dna = createDna(layers);
+      const dna = createDna(layers, dnas, 0);
+      dnas.add(filterDNAOptions(dna));
       
       editions.push({
         edition: editionCount,
-        index: abstractedIndexes[0],
+        index: abstractedIndexes.shift(),
         dna,
         dnaHash: sha1(dna),
         layers: constructLayerToDna(dna, layers),
-        layersOrderLength: layerConfig.layersOrder.length,
-        growEditionSizeTo: layerConfig.growEditionSizeTo,
       });
-
-      // TODO: recursively create until DNA is unique in set..
-      // dnas.add(filterDNAOptions(dna));
-
       editionCount++;
-      abstractedIndexes.shift();
     }
 
     // dispatch build jobs to worker threads..
@@ -354,8 +362,8 @@ const build = async () => {
             measures.push(measure);
 
             if (err) {
-              console.error(`> [onbuild] error`, err);
               failedCount++;
+              console.error(`> [onBuild error]`, `#`, failedCount, `err:`, err);
               if (failedCount >= uniqueDnaTorrance) {
                 console.warn(
                   `> You need more layers or elements to grow your edition to`, layerConfig.growEditionSizeTo, `artworks!`
@@ -375,7 +383,7 @@ const build = async () => {
               );
               metadatas.push(result.metadata);
             }
-            process.nextTick(resolve);
+            setImmediate(resolve);
           };
 
           console.debug(`> dispatching`, edition.index, `to worker`, `pending:`, queue.pending);
@@ -391,8 +399,11 @@ const build = async () => {
   }
 
   console.debug(``);
-  console.debug(`> Writing metadatas..`);
+  console.debug(`> Writing metadatas.json..`);
   writeMetadata(metadatas);
+
+  // TODO: need to sync image/json assets with arweave uploader..
+  // then do uri replacements..
 
   const end_ts = performance.now();
   console.debug(

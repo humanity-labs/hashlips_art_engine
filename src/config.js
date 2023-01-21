@@ -2,7 +2,7 @@ const basePath = process.cwd();
 const { MODE } = require(`${basePath}/constants/blend_mode.js`);
 const { NETWORK } = require(`${basePath}/constants/network.js`);
 
-// General metadata for Ethereum
+// if network is solana, then collection starts from 0 automatically
 const network = NETWORK.sol;
 const namePrefix = 'BB';
 const description = 'BB Pods are the beginning of the BB story.';
@@ -20,8 +20,1021 @@ const solanaMetadata = {
 };
 
 
-// if network is solana, then the collection starts from 0 automatically
-const layerConfigurations = [
+const layerConfigurations_BLUE = [
+  /**
+   * BLUE Special
+   */
+  {
+    growEditionSizeTo: 10,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "BLUE EYEWEAR",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "BLUE SPECIAL CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HAT
+      {
+        name: "BLUE SPECIAL HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 20,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE EYEWEAR",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HAT
+      {
+        name: "BLUE SPECIAL HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 30,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE EYEWEAR",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "BLUE SPECIAL CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE SPECIAL HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 50,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE SPECIAL CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE SPECIAL HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 100,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "BLUE SPECIAL CLOTHES",
+      //   options: {
+      //     displayName: "Clothes",
+      //   }
+      // },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "BLUE SPECIAL HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 110,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // {
+      //   name: "BLUE SPECIAL NECKWEAR",
+      //   options: {
+      //     displayName: "Neckwear",
+      //   }
+      // },
+      // HATS
+      {
+        name: "BLUE SPECIAL HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+
+  /**
+   * BLUE No EYEWEAR, No HAT
+   */
+  {
+    growEditionSizeTo: 150,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 175,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 200,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 225,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+
+  /**
+   * BLUE w EYEWEAR, No HAT
+   */
+  {
+    growEditionSizeTo: 250,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE EYEWEAR",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 275,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE EYEWEAR",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 300,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE EYEWEAR",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+  {
+    growEditionSizeTo: 325,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      {
+        name: "BLUE EYEWEAR",
+        options: {
+          displayName: "Eyewear",
+        }
+      },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      // {
+      //   name: "BLUE HAT",
+      //   options: {
+      //     displayName: "Hat",
+      //   }
+      // },
+    ],
+  },
+
+  /**
+   * BLUE No EYEWEAR, w HAT
+   */
+  {
+    growEditionSizeTo: 350,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "BLUE EYEWEAR",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "BLUE HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 375,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "BLUE EYEWEAR",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "BLUE HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 400,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "BLUE BROWS",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "BLUE EYEWEAR",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "BLUE HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+  {
+    growEditionSizeTo: 425,
+    layersOrder: [
+      {
+        name: "BLUE BACKGROUND",
+        options: {
+          displayName: "Background",
+        }
+      },
+      {
+        name: "BLUE SKIN",
+        options: {
+          displayName: "Skin",
+        }
+      },
+      {
+        name: "BLUE MOUTH",
+        options: {
+          displayName: "Mouth",
+        }
+      },
+      // EYES
+      {
+        name: "BLUE EYES EYELID BOTTOM",
+        options: {
+          displayName: "Eyes",
+        }
+      },
+      // BROWS
+      // {
+      //   name: "Brows Red",
+      //   options: {
+      //     displayName: "Brows",
+      //   }
+      // },
+      // EYEWEAR
+      // {
+      //   name: "Eyewear Red",
+      //   options: {
+      //     displayName: "Eyewear",
+      //   }
+      // },
+      {
+        name: "BLUE CLOTHES",
+        options: {
+          displayName: "Clothes",
+        }
+      },
+      // HATS
+      {
+        name: "BLUE HAT",
+        options: {
+          displayName: "Hat",
+        }
+      },
+    ],
+  },
+];
+
+const layerConfigurations_RED = [
   /**
    * Red Special
    */
@@ -863,6 +1876,8 @@ const layerConfigurations = [
     ],
   },
 ];
+
+const layerConfigurations = layerConfigurations_BLUE;
 
 
 const debugLogs = true;
