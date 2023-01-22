@@ -2,21 +2,38 @@ const basePath = process.cwd();
 const fs_promises = require("fs").promises;
 const { createCanvas, loadImage } = require(`canvas`);
 const { performance } = require('perf_hooks');
-const log = require(`${basePath}/node_modules/npmlog`);
-log.enableColor();
+// const log = require(`${basePath}/node_modules/npmlog`);
+// log.enableColor();
+
+// arweave via bundlr integration
+const {
+  Keypair,
+  Connection,
+} = require("@solana/web3.js");
+const {
+  Metaplex,
+  keypairIdentity,
+  bundlrStorage,
+  toMetaplexFile,
+} = require('@metaplex-foundation/js');
+
+const KEY = process.env.KEY;
+const keypair = KEY?.length ? Keypair.fromSecretKey(new Uint8Array(JSON.parse(KEY))) : Keypair.generate();
+console.debug(`> keypair identity`, keypair.publicKey.toBase58());
+const metaplex = Metaplex
+  .make(new Connection(process.env.SOLANA_RPC))
+  .use(keypairIdentity(keypair))
+  .use(bundlrStorage());
+const nfts = metaplex.nfts();
 
 const buildDir = `${basePath}/build`;
 const { NETWORK } = require(`${basePath}/constants/network.js`);
 const {
-  format,
-  baseUri,
-  description,
-  // background,
-  extraMetadata,
-  // text,
-  namePrefix,
+  layer_config,
+  metadata_config,
   network,
-  solanaMetadata,
+  // background,
+  // text,
   // gif,
 } = require(`${basePath}/src/config.js`);
 
@@ -52,36 +69,37 @@ const buildMetadata = (_dna, dnaHash, edition, attrs) => {
   let metadata;
   if (network === NETWORK.sol) {
     metadata = {
-      name: `${namePrefix} #${edition}`,
-      symbol: solanaMetadata.symbol,
-      description,
-      seller_fee_basis_points: solanaMetadata.seller_fee_basis_points,
+      name: `${metadata_config.name_prefix} #${edition}`,
+      symbol: metadata_config.solana.symbol,
+      description: metadata_config.description,
+      collection: metadata_config.solana.collection,
+      seller_fee_basis_points: metadata_config.solana.seller_fee_basis_points,
       image: `${edition}.png`,
-      external_url: solanaMetadata.external_url,
+      external_url: metadata_config.solana.external_url,
       edition,
-      ...extraMetadata,
+      ...metadata_config.extra_metadata,
       attributes: attrs,
       properties: {
         files: [
           {
             uri: `${edition}.png`,
-            type: "image/png",
+            type: 'image/png',
           },
         ],
-        category: "image",
-        creators: solanaMetadata.creators,
+        category: 'image',
+        creators: metadata_config.solana.creators,
       },
     };
   }
   else {
     metadata = {
-      name: `${namePrefix} #${edition}`,
-      description,
-      image: `${baseUri}/${edition}.png`,
+      name: `${metadata_config.name_prefix} #${edition}`,
+      description: metadata_config.description,
+      image: `${metadata_config.base_uri}/${edition}.png`,
       dna: dnaHash,
       edition,
       date: Date.now(),
-      ...extraMetadata,
+      ...metadata_config.extra_metadata,
       attributes: attrs,
       // compiler: "HashLips Art Engine",
     };
@@ -107,9 +125,9 @@ const loadLayerImage = async (layer) => {
 };
 
 const generate = () => {
-  const canvas = createCanvas(format.width, format.height);
+  const canvas = createCanvas(layer_config.format.width, layer_config.format.height);
   const ctx = canvas.getContext('2d', { alpha: false });
-  ctx.imageSmoothingEnabled = format.smoothing;
+  ctx.imageSmoothingEnabled = layer_config.format.smoothing;
   // ctx.imageSmoothingQuality = "high";
   return { canvas, ctx };
 };
@@ -122,7 +140,7 @@ const generate = () => {
 
 /*const drawBackground = (ctx) => {
   ctx.fillStyle = background.static ? background.default : genColor();
-  ctx.fillRect(0, 0, format.width, format.height);
+  ctx.fillRect(0, 0, layer_config.format.width, layer_config.format.height);
 };*/
 
 /*const addText = (ctx, _sig, x, y, size) => {
@@ -152,7 +170,7 @@ const drawElement = (ctx, renderObject, index) => {
 
   // console.debug(`> Drawing element to canvas..`);
   ctx.drawImage(
-    renderObject.image, 0, 0, format.width, format.height
+    renderObject.image, 0, 0, layer_config.format.width, layer_config.format.height
   );
 
   // const e = performance.now();
@@ -162,12 +180,13 @@ const drawElement = (ctx, renderObject, index) => {
 const layer = generate();
 
 const build = async (edition, callback) => {
-  // console.debug(`> [build-worker]`, edition);
+  const pid = process.pid;
+  // console.debug(`> [build-worker (`, pid, `)]`, edition);
   const elements = edition.layers.map(_ => loadLayerImage(_));
 
   return Promise.all(elements)
-  .then(async (renderObjects, idx) => {
-    const attrs = renderObjects.map(_ => ({
+  .then((renders) => {
+    const attrs = renders.map(_ => ({
       trait_type: _.layer.name,
       value: _.layer.element.name,
     }));
@@ -180,7 +199,7 @@ const build = async (edition, callback) => {
 
     const start = performance.now();
     // console.log("> Clearing canvas");
-    layer.ctx.clearRect(0, 0, format.width, format.height);
+    layer.ctx.clearRect(0, 0, layer_config.format.width, layer_config.format.height);
 
     /*if (gif.export) {
       console.debug(`> adding gif export..`);
@@ -200,20 +219,17 @@ const build = async (edition, callback) => {
       drawBackground(layer.ctx);
     }*/
 
-    renderObjects.map(async (renderObject, index) => {
+    renders.map(async (render, index) => {
       // if (gif?.export) hashlipsGiffer.add();
       drawElement(
         layer.ctx,
-        renderObject,
+        render,
         index,
       );
     });
     // if (gif?.export) hashlipsGiffer.stop();
 
     const end = performance.now();
-    console.debug(
-      `>`, `rendering:`, parseFloat(((end - start) / 1000).toFixed(2)), `sec\n`,
-    );
 
     /*process.nextTick(() => {
       console.debug(
@@ -229,11 +245,73 @@ const build = async (edition, callback) => {
     .then(() => {
       console.debug(
         `>`, `Created edition: #`, edition.index, ` DNA (hash): ${edition.dnaHash}`, 
+        `pid:`, pid,
       );
-      callback({ metadata });
+      callback({ metadata, pid, rendering: (end - start) });
     });
   });
 };
 
+const is_retryable = (err) => {
+  const e = err.toString().toLowerCase();
+  const rpc_retryable = [
+    'ENOTFOUND',
+    'ECONNRESET',
+    'blockhash not found',
+    'unable to obtain a new blockhash after',
+    'node behind',
+  ];
+  return rpc_retryable.find(_ => e.includes(_));
+};
+
+const metaplexFile = async (filename) => {
+  return fs_promises.readFile(`${buildDir}/images/${filename}`)
+  .then(buff => {
+    return Promise.resolve(toMetaplexFile(buff, filename));
+  });
+}
+
+const upload = async (
+  edition,
+  filename,
+  metadata,
+  callback,
+  attempt = 0,
+) => {
+  const pid = process.pid;
+  console.debug(`> [upload-worker (`, pid, `)]`, edition, filename);
+  metaplex.connection = new Connection(
+    process.env.SOLANA_RPC, 'confirmed'
+  );
+
+  const image_file = await metaplexFile(filename);
+  metadata.image = image_file;
+  metadata.properties.files[0].uri = image_file;
+
+  return nfts.uploadMetadata(metadata)
+  .then(result => {
+    console.debug(`Upload result`, {
+      id: edition,
+      json_uri: result.uri,
+      image_uris: result.assetUris,
+    });
+    return callback({
+      id: edition,
+      json_uri: result.uri,
+      image_uris: result.assetUris,
+      metadata: result.metadata,
+    });
+  })
+  .catch(err => {
+    if (is_retryable(err)) return upload(...arguments);
+    
+    console.error(`> [nfts.uploadMetadata error]`, err);
+    if (attempt > 10) return callback(null, err);
+
+    console.debug(`> [nfts.uploadMetadata] re-attempt(`, attempt, `)`, filename);
+    return upload(edition, filename, metadata, callback, ++attempt);
+  });
+};
+
 console.debug(`> Worker module initialized..`);
-module.exports = build;
+module.exports = { build, upload };

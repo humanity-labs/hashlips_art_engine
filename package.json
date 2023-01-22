@@ -12,18 +12,22 @@
     ]
   },
   "scripts": {
-    "build": "node index.js",
+    "build": "node --no-warnings --experimental-abortcontroller index.js",
+    "rebuild": "npm rebuild; npm i -g npm-check-updates ncu -u",
     "generate": "node index.js",
     "rarity": "node utils/rarity.js",
     "preview": "node utils/preview.js",
+    "preview_gif": "node utils/preview_gif.js",
     "pixelate": "node utils/pixelate.js",
     "update_info": "node utils/update_info.js",
-    "preview_gif": "node utils/preview_gif.js",
     "generate_metadata": "node utils/generate_metadata.js"
   },
   "author": "Daniel Eugene Botha (HashLips)",
   "license": "MIT",
   "dependencies": {
+    "@metaplex-foundation/js": "^0.17.12",
+    "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
+    "@solana/web3.js": "^1.73.0",
     "canvas": "^2.8.0",
     "gif-encoder-2": "^1.0.5",
     "p-queue": "^6.6.2",

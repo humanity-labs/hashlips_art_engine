@@ -3,41 +3,45 @@ const fs = require('fs');
 const sha1 = require(`${basePath}/node_modules/sha1`);
 const { performance } = require('perf_hooks');
 const PQueue = require('p-queue').default;
+const {
+  Keypair,
+  Connection,
+  LAMPORTS_PER_SOL,
+} = require("@solana/web3.js");
+const KEY = process.env.KEY;
+const keypair = KEY?.length ? Keypair.fromSecretKey(new Uint8Array(JSON.parse(KEY))) : Keypair.generate();
 
 const workerFarm = require('worker-farm');
 const cpus = require('os').cpus().length;
-const FARM_OPTIONS = {
+const FARM_OPTS = {
   autoStart: true,
   maxConcurrentWorkers: cpus,
   maxCallsPerWorker: Infinity,
-  maxConcurrentCallsPerWorker: 1,
+  maxConcurrentCallsPerWorker: 10,
   // maxConcurrentCallsPerWorker: Infinity,
   maxRetries: Infinity,
   workerOptions: {
     detached: true,
   },
   onChild: (child) => {
-    console.debug(`> onChild`, {
-      pid: child.pid,
+    console.debug(`> onChild (`, child.pid, `)`, {
       spawnfile: child.spawnfile,
       killed: child.killed,
       connected: child.connected,
-      send: child.send,
-      disconnect: child.disconnect,
-      // channel: child.channel,
+      send: `subprocess.send(message[, sendHandle[, options]][, callback])`,
+      disconnect: `subprocess.disconnect()`,
     });
   },
 };
-const worker = workerFarm(FARM_OPTIONS, require.resolve('./worker'));
+const worker = workerFarm(FARM_OPTS, require.resolve('./worker'), ['build', 'upload']);
 
 const buildDir = `${basePath}/build`;
 const layersDir = `${basePath}/layers`;
 const { NETWORK } = require(`${basePath}/constants/network.js`);
 const {
-  uniqueDnaTorrance,
   layerConfigurations,
-  rarityDelimiter,
-  shuffleLayerConfigurations,
+  layer_config,
+  storage_config,
   debugLogs,
   network,
   gif,
@@ -65,9 +69,9 @@ const buildSetup = () => {
   layers.forEach(layer => {
     rm(`${layersDir}/${layer}/.DS_Store`);
     const items = fs.readdirSync(`${layersDir}/${layer}`, { encoding: 'utf8' });
-    console.debug(`[pre-process] items`, layer, items.length, items);
+    // console.debug(`[pre-process] items`, layer, items.length, items);
     items.forEach((item, idx) => {
-      console.debug(`[pre-process]`, layer, idx, item);
+      // console.debug(`[pre-process]`, layer, idx, item);
 
       const cleaned = item
         .split('.png')[0]
@@ -91,7 +95,7 @@ const getRarityWeight = (_str) => {
   // todo: should find last index of `.` char and slice to end..
   const nameWithoutExtension = _str.slice(0, -4);
   let nameWithoutWeight = Number(
-    nameWithoutExtension.split(rarityDelimiter).pop()
+    nameWithoutExtension.split(layer_config.rarity_delimiter).pop()
   );
   if (isNaN(nameWithoutWeight)) {
     nameWithoutWeight = 1;
@@ -101,7 +105,7 @@ const getRarityWeight = (_str) => {
 
 const cleanName = (_str) => {
   const nameWithoutExtension = _str.slice(0, -4);
-  const nameWithoutWeight = nameWithoutExtension.split(rarityDelimiter).shift();
+  const nameWithoutWeight = nameWithoutExtension.split(layer_config.rarity_delimiter).shift();
   return nameWithoutWeight;
 };
 
@@ -163,9 +167,9 @@ const layersSetup = (layersOrder) => {
 };
 
 const constructLayerToDna = (_dna = "", _layers = []) => {
-  return _layers.map((layer, index) => {
+  return _layers.map((layer, idx) => {
     const element = layer.elements.find(
-      e => e.id == cleanDna(_dna.split(DNA_DELIMITER)[index])
+      e => e.id == cleanDna(_dna.split(DNA_DELIMITER)[idx])
     );
     return {
       name: layer.name,
@@ -271,6 +275,14 @@ const writeMetadata = (_data) => {
   fs.writeFileSync(`${buildDir}/metadata.json`, JSON.stringify(_data, null, 2));
 };
 
+const writeUploads = (_data) => {
+  fs.writeFileSync(`${buildDir}/asset-uploads.json`, JSON.stringify(_data, null, 2));
+};
+
+const writeFailedUploads = (_data) => {
+  fs.writeFileSync(`${buildDir}/asset-uploads-failed.json`, JSON.stringify(_data, null, 2));
+};
+
 const shuffle = (array) => {
   let currentIndex = array.length, randomIndex;
   while (currentIndex != 0) {
@@ -293,7 +305,7 @@ const generateIndexes = () => {
   ) {
     abstractedIndexes.push(i);
   }
-  if (shuffleLayerConfigurations) {
+  if (layer_config.shuffle) {
     return shuffle(abstractedIndexes);
   }
   else {
@@ -301,26 +313,72 @@ const generateIndexes = () => {
   }
 };
 
+const measure = (start, end, total, index, measures) => {
+  const res = {
+    sum: 0,
+    avg: 0,
+    runtime: (end - start),
+    current: index,
+    remaining: (total - index) > 0 ? (total - index) : 1,
+    remainingTime: 0,
+  };
+  res.sum += res.runtime;
+  measures.forEach(_ => res.sum += _.runtime);
+  res.avg = res.sum / (measures.length + 1);
+  res.remainingTime = (res.remaining * res.avg) / FARM_OPTS.maxConcurrentWorkers;
+  return res;
+};
+
+const is_retryable = (err) => {
+  const e = err.toString().toLowerCase();
+  const rpc_retryable = [
+    'ENOTFOUND',
+    'ECONNRESET',
+    'blockhash not found',
+    'unable to obtain a new blockhash after',
+    'node behind',
+  ];
+  return rpc_retryable.find(_ => e.includes(_));
+};
+
+const getBalance = async (address) => {
+  const cxn = new Connection(
+    process.env.SOLANA_RPC
+  );
+  return cxn.getBalance(address)
+  .catch(err => {
+    if (is_retryable(err))
+      return getBalance(address);
+    else
+      return Promise.resolve(0);
+  });
+};
+
 const build = async () => {
   const start_ts = performance.now();
+  const layerConfigTotal = layerConfigurations.length;
   let layerConfigIndex = 0;
   let editionCount = 1;
   let failedCount = 0;
 
-  const metadatas = [];
-  const dnas = new Set();
-  
   const abstractedIndexes = generateIndexes();
   const total = abstractedIndexes.length;
-  console.debug(`> Creating`, total, `Editions:`, abstractedIndexes, `Workers:`, FARM_OPTIONS.maxConcurrentWorkers);
+  console.debug(`> Creating`, total, `Editions:`, abstractedIndexes, `Workers:`, FARM_OPTS.maxConcurrentWorkers);
 
-  const queue = new PQueue({
-    concurrency: (FARM_OPTIONS.maxConcurrentWorkers * FARM_OPTIONS.maxConcurrentCallsPerWorker) * 1,
+  const render_queue = new PQueue({
+    concurrency: (FARM_OPTS.maxConcurrentWorkers * 1) * 1,
     autoStart: true,
   });
-  const measures = [];
+  const upload_queue = new PQueue({
+    concurrency: (FARM_OPTS.maxConcurrentWorkers * FARM_OPTS.maxConcurrentCallsPerWorker) * 2,
+    autoStart: true,
+  });
 
-  while (layerConfigIndex < layerConfigurations.length) {
+  const measures = [];
+  const metadatas = [];
+  const dnas = new Set();
+
+  while (layerConfigIndex < layerConfigTotal) {
     const layerConfig = layerConfigurations[layerConfigIndex];
     const layers = layersSetup(layerConfig.layersOrder);
 
@@ -340,31 +398,22 @@ const build = async () => {
     }
 
     // dispatch build jobs to worker threads..
-    editions.map(async (edition) => {
-      return queue.add(async () => {
+    editions.map(edition => {
+      return render_queue.add(async () => {
         return new Promise(resolve => {
           const start = performance.now();
 
           const onBuild = (result, err) => {
             const end = performance.now();
-            const measure = {
-              sum: 0,
-              avg: 0,
-              runtime: (end - start),
-              current: edition.index,
-              remaining: (total - edition.index) > 0 ? (total - edition.index) : 1,
-              remainingTime: 0,
-            };
-            measure.sum += measure.runtime;
-            measures.forEach(_ => measure.sum += _.runtime);
-            measure.avg = measure.sum / (measures.length + 1);
-            measure.remainingTime = (measure.remaining * measure.avg) / FARM_OPTIONS.maxConcurrentWorkers;
-            measures.push(measure);
+            const measurement = measure(
+              start, end, total, edition.index, measures
+            );
+            measures.push(measurement);
 
             if (err) {
               failedCount++;
               console.error(`> [onBuild error]`, `#`, failedCount, `err:`, err);
-              if (failedCount >= uniqueDnaTorrance) {
+              if (failedCount >= layer_config.unique_dna_torrance) {
                 console.warn(
                   `> You need more layers or elements to grow your edition to`, layerConfig.growEditionSizeTo, `artworks!`
                 );
@@ -374,45 +423,114 @@ const build = async () => {
             else {
               // console.debug(`> [onbuild] result`, result);
               console.debug(
-                `> runtime:\n`, 
-                `- edition:`, measure.current, parseFloat((measure.runtime / 1000).toFixed(2)), `sec`, `\n`,
-                `- avg:`, parseFloat((measure.avg / 1000).toFixed(2)), `sec`, `\n`,
+                `> runtime (`, measurement.current, `):`, result.pid, `\n`, 
+                `   - rendering:`, parseFloat((result.rendering / 1000).toFixed(2)), `sec`, `\n`,
+                `   - current:`, parseFloat((measurement.runtime / 1000).toFixed(2)), `sec`, `\n`,
+                `   - average:`, parseFloat((measurement.avg / 1000).toFixed(2)), `sec`, `\n`,
+                `   - estmted:`, parseFloat((measurement.remainingTime / 1000 / 60).toFixed(2)), `min`, `\n`,
                 `- completed:`, measures.length, `editions`, `\n`,
-                `- remaining:`, measure.remaining, `editions`, `\n`,
-                `- estimated:`, parseFloat((measure.remainingTime / 1000 / 60).toFixed(2)), `min`, `\n`,
+                `- remaining:`, measurement.remaining, `editions`, `\n`,
               );
               metadatas.push(result.metadata);
             }
-            setImmediate(resolve);
+            process.nextTick(resolve);
           };
 
-          console.debug(`> dispatching`, edition.index, `to worker`, `pending:`, queue.pending);
-          worker(edition, onBuild.bind(null));
+          console.debug(
+            `> dispatching build`, edition.index, `to worker`, `pending:`, render_queue.pending,
+          );
+          worker.build(edition, onBuild.bind(null));
 
         });
       });
     });
 
-    await queue.onIdle();
+    await render_queue.onIdle();
     layerConfigIndex++;
     console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
   }
 
-  console.debug(``);
-  console.debug(`> Writing metadatas.json..`);
-  writeMetadata(metadatas);
-
-  // TODO: need to sync image/json assets with arweave uploader..
-  // then do uri replacements..
+  if (metadatas.length) {
+    console.debug(``);
+    console.debug(`> Writing metadatas.json..`);
+    writeMetadata(metadatas);
+  }
 
   const end_ts = performance.now();
   console.debug(
-    `>`, `Build complete..`,
+    `>`, `Build of`, metadatas.length, ` nfts complete..`,
     `\n>`, parseFloat(((end_ts - start_ts) / 1000 / 60).toFixed(2)), `min\n`,
   );
+
+  if (storage_config.upload && metadatas.length) {
+    console.debug(``);
+    console.debug(`> Syncing image/json assets with arweave..`);
+    const start_ts = performance.now();
+    const uploads = [];
+    const failed_uploads = [];
+
+    // pre-balance checks..
+    const balance_pre = await getBalance(keypair.publicKey);
+  
+    metadatas.map(metadata => {
+      return upload_queue.add(async () => {
+        return new Promise(resolve => {
+  
+          const onUpload = (result, err) => {
+            if (err) {
+              console.error(`> [error]`, err);
+              failed_uploads.push(metadata);
+            } else {
+              uploads.push(result);
+              // writeUploads(uploads).then(resolve);
+            }
+            process.nextTick(resolve);
+          };
+  
+          console.debug(
+            `> dispatching upload`, metadata.name, `to worker`, `pending:`, upload_queue.pending
+          );
+          const edition = metadata.edition;
+          delete metadata.edition;
+          worker.upload(edition, metadata.image, metadata, onUpload.bind(null));
+  
+        });
+      });
+    });
+    
+    await upload_queue.onIdle();
+  
+    if (uploads.length) {
+      console.debug(``);
+      console.debug(`> Writing`, uploads.length, `results to asset-uploads.json..`);
+      writeUploads(uploads);
+    }
+    if (failed_uploads.length) {
+      console.debug(`> Writing`, failed_uploads.length, `to asset-uploads-failed.json..`);
+      writeFailedUploads(failed_uploads);
+    }
+
+    // post-balance checks..
+    const balance_post = await getBalance(keypair.publicKey);
+
+    const end_ts = performance.now();
+    console.debug(
+      `>`, `Upload of`, metadatas.length, `nfts complete..`,
+      `\n>`, parseFloat(((end_ts - start_ts) / 1000 / 60).toFixed(2)), `min\n`,
+      `- balance-pre:`, (balance_pre / LAMPORTS_PER_SOL), `SOL\n`,
+      `- balance-post:`, (balance_post / LAMPORTS_PER_SOL), `SOL\n`,
+      `- cost:`, ((balance_pre - balance_post) / LAMPORTS_PER_SOL), `SOL\n`,
+    );
+  }
+
+  console.debug(`>`, `Stopping worker-farm..`);
   workerFarm.end(worker, () => {
     process.exit(0);
   });
 };
 
-module.exports = { build, buildSetup, getElements };
+module.exports = {
+  build,
+  buildSetup,
+  getElements,
+};
