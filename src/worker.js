@@ -255,13 +255,15 @@ const build = async (edition, callback) => {
 const is_retryable = (err) => {
   const e = err.toString().toLowerCase();
   const rpc_retryable = [
-    'ENOTFOUND',
-    'ECONNRESET',
+    'enotfound',
+    'econnreset',
+    'etimeout',
+    'eai_again',
     'blockhash not found',
     'unable to obtain a new blockhash after',
-    'node behind',
+    'node is behind',
   ];
-  return rpc_retryable.find(_ => e.includes(_));
+  return rpc_retryable.find(_ => e.includes(_)) ? true : false;
 };
 
 const metaplexFile = async (filename) => {
