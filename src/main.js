@@ -234,13 +234,16 @@ const createDna = (_layers, _dnas, attempt = 0) => {
     layer.elements.forEach(_ => {
       totalWeight += _.weight;
     });
-
+    
     // number between 0 - totalWeight
     let random = Math.floor(Math.random() * totalWeight);
+    console.debug(`totalWeight`, totalWeight, `random`, random)
+
     for (let i = 0, t = layer.elements.length; i < t; i++) {
       // subtract the current weight from the random weight
       // until we reach a sub zero value.
       random -= layer.elements[i].weight;
+      console.debug(layer.elements[i].name, `(`, i, `)`, `weight`, layer.elements[i].weight, `random`, random)
       if (random < 0) {
         return random_nums.push(
           `${layer.elements[i].id}:${layer.elements[i].filename}${
@@ -251,6 +254,7 @@ const createDna = (_layers, _dnas, attempt = 0) => {
     }
   });
 
+  console.debug(`random_nums`, random_nums)
   const dna = random_nums.join(DNA_DELIMITER);
 
   // recursively call until DNA is unique in set..
@@ -277,6 +281,24 @@ const writeMetadata = (_data) => {
 
 const writeUploads = (_data) => {
   fs.writeFileSync(`${buildDir}/asset-uploads.json`, JSON.stringify(_data, null, 2));
+};
+
+const writeUploadsCSV = (_uploads) => {
+  const csv = [];
+
+  csv.push([
+    'name',
+    'uri',
+  ].join(','));
+
+  _uploads.forEach(item => {
+    csv.push([
+      item.metadata.name,
+      item.json_uri,
+    ].join(','));
+  });
+
+  fs.writeFileSync(`${buildDir}/config-lines.csv`, csv.join('\n'));
 };
 
 const writeFailedUploads = (_data) => {
@@ -507,6 +529,10 @@ const build = async () => {
       console.debug(``);
       console.debug(`> Writing`, uploads.length, `results to asset-uploads.json..`);
       writeUploads(uploads);
+      
+      console.debug(`> Writing`, uploads.length, `results to asset-uploads.csv..`);
+      writeUploadsCSV(uploads);
+
     }
     if (failed_uploads.length) {
       console.debug(`> Writing`, failed_uploads.length, `to asset-uploads-failed.json..`);
