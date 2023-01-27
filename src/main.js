@@ -48,6 +48,7 @@ const {
 } = require(`${basePath}/src/config.js`);
 
 const DNA_DELIMITER = `-`;
+const CLEAR = false;
 
 const rm = (path) => {
   if (fs.existsSync(path)) {
@@ -56,6 +57,7 @@ const rm = (path) => {
 };
 
 const buildSetup = () => {
+  if (!CLEAR) return;
   if (fs.existsSync(buildDir)) fs.rmdirSync(buildDir, { recursive: true });
   fs.mkdirSync(buildDir);
   fs.mkdirSync(`${buildDir}/json`);
@@ -379,6 +381,9 @@ const getBalance = async (address) => {
   });
 };
 
+const RENDER = false;
+const UPLOAD = true;
+
 const build = async () => {
   const start_ts = performance.now();
   const layerConfigTotal = layerConfigurations.length;
@@ -403,153 +408,168 @@ const build = async () => {
   const metadatas = [];
   const dnas = new Set();
 
-  while (layerConfigIndex < layerConfigTotal) {
-    const layerConfig = layerConfigurations[layerConfigIndex];
-    const layers = layersSetup(layerConfig.layersOrder);
-
-    const editions = [];
-    while (editionCount <= layerConfig.growEditionSizeTo) {
-      const dna = createDna(layers, dnas, 0);
-      dnas.add(filterDNAOptions(dna));
-      
-      editions.push({
-        edition: editionCount,
-        index: abstractedIndexes.shift(),
-        dna,
-        dnaHash: sha1(dna),
-        layers: constructLayerToDna(dna, layers),
-      });
-      editionCount++;
-    }
-
-    // dispatch build jobs to worker threads..
-    editions.map(edition => {
-      return render_queue.add(async () => {
-        return new Promise(resolve => {
-          const start = performance.now();
-
-          const onBuild = (result, err) => {
-            const end = performance.now();
-            const measurement = measure(
-              start, end, total, edition.index, measures
-            );
-            measures.push(measurement);
-
-            if (err) {
-              failedCount++;
-              console.error(`> [onBuild error]`, `#`, failedCount, `err:`, err);
-              if (failedCount >= layer_config.unique_dna_torrance) {
-                console.warn(
-                  `> You need more layers or elements to grow your edition to`, layerConfig.growEditionSizeTo, `artworks!`
-                );
-                process.exit(1);
-              }
-            }
-            else {
-              // console.debug(`> [onbuild] result`, result);
-              console.debug(
-                `> runtime (`, measurement.current, `):`, result.pid, `\n`, 
-                `   - rendering:`, parseFloat((result.rendering / 1000).toFixed(2)), `sec`, `\n`,
-                `   - current:`, parseFloat((measurement.runtime / 1000).toFixed(2)), `sec`, `\n`,
-                `   - average:`, parseFloat((measurement.avg / 1000).toFixed(2)), `sec`, `\n`,
-                `   - estmted:`, parseFloat((measurement.remainingTime / 1000 / 60).toFixed(2)), `min`, `\n`,
-                `- completed:`, measures.length, `editions`, `\n`,
-                `- remaining:`, measurement.remaining, `editions`, `\n`,
+  if (RENDER) {
+    while (layerConfigIndex < layerConfigTotal) {
+      const layerConfig = layerConfigurations[layerConfigIndex];
+      const layers = layersSetup(layerConfig.layersOrder);
+  
+      const editions = [];
+      while (editionCount <= layerConfig.growEditionSizeTo) {
+        const dna = createDna(layers, dnas, 0);
+        dnas.add(filterDNAOptions(dna));
+        
+        editions.push({
+          edition: editionCount,
+          index: abstractedIndexes.shift(),
+          dna,
+          dnaHash: sha1(dna),
+          layers: constructLayerToDna(dna, layers),
+        });
+        editionCount++;
+      }
+  
+      // dispatch build jobs to worker threads..
+      editions.map(edition => {
+        return render_queue.add(async () => {
+          return new Promise(resolve => {
+            const start = performance.now();
+  
+            const onBuild = (result, err) => {
+              const end = performance.now();
+              const measurement = measure(
+                start, end, total, edition.index, measures
               );
-              metadatas.push(result.metadata);
-            }
-            process.nextTick(resolve);
-          };
-
-          console.debug(
-            `> dispatching build`, edition.index, `to worker`, `pending:`, render_queue.pending,
-          );
-          worker.build(edition, onBuild.bind(null));
-
+              measures.push(measurement);
+  
+              if (err) {
+                failedCount++;
+                console.error(`> [onBuild error]`, `#`, failedCount, `err:`, err);
+                if (failedCount >= layer_config.unique_dna_torrance) {
+                  console.warn(
+                    `> You need more layers or elements to grow your edition to`, layerConfig.growEditionSizeTo, `artworks!`
+                  );
+                  process.exit(1);
+                }
+              }
+              else {
+                // console.debug(`> [onbuild] result`, result);
+                console.debug(
+                  `> runtime (`, measurement.current, `):`, result.pid, `\n`, 
+                  `   - rendering:`, parseFloat((result.rendering / 1000).toFixed(2)), `sec`, `\n`,
+                  `   - current:`, parseFloat((measurement.runtime / 1000).toFixed(2)), `sec`, `\n`,
+                  `   - average:`, parseFloat((measurement.avg / 1000).toFixed(2)), `sec`, `\n`,
+                  `   - estmted:`, parseFloat((measurement.remainingTime / 1000 / 60).toFixed(2)), `min`, `\n`,
+                  `- completed:`, measures.length, `editions`, `\n`,
+                  `- remaining:`, measurement.remaining, `editions`, `\n`,
+                );
+                metadatas.push(result.metadata);
+              }
+              process.nextTick(resolve);
+            };
+  
+            console.debug(
+              `> dispatching build`, edition.index, `to worker`, `pending:`, render_queue.pending,
+            );
+            worker.build(edition, onBuild.bind(null));
+  
+          });
         });
       });
-    });
-
-    await render_queue.onIdle();
-    layerConfigIndex++;
-    console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
-  }
-
-  if (metadatas.length) {
-    console.debug(``);
-    console.debug(`> Writing metadatas.json..`);
-    writeMetadata(metadatas);
-  }
-
-  const end_ts = performance.now();
-  console.debug(
-    `>`, `Build of`, metadatas.length, ` nfts complete..`,
-    `\n>`, parseFloat(((end_ts - start_ts) / 1000 / 60).toFixed(2)), `min\n`,
-  );
-
-  if (storage_config.upload && metadatas.length) {
-    console.debug(``);
-    console.debug(`> Syncing image/json assets with arweave..`);
-    const start_ts = performance.now();
-    const uploads = [];
-    const failed_uploads = [];
-
-    // pre-balance checks..
-    const balance_pre = await getBalance(keypair.publicKey);
   
-    metadatas.map(metadata => {
-      return upload_queue.add(async () => {
-        return new Promise(resolve => {
-  
-          const onUpload = (result, err) => {
-            if (err) {
-              console.error(`> [error]`, err);
-              failed_uploads.push(metadata);
-            } else {
-              uploads.push(result);
-              // writeUploads(uploads).then(resolve);
-            }
-            process.nextTick(resolve);
-          };
-  
-          console.debug(
-            `> dispatching upload`, metadata.name, `to worker`, `pending:`, upload_queue.pending
-          );
-          const edition = metadata.edition;
-          delete metadata.edition;
-          worker.upload(edition, metadata.image, metadata, onUpload.bind(null));
-  
-        });
-      });
-    });
-    
-    await upload_queue.onIdle();
-  
-    if (uploads.length) {
+      await render_queue.onIdle();
+      layerConfigIndex++;
+      console.debug(`>`, abstractedIndexes.length, `Editions left to create:`, abstractedIndexes);
+    }
+
+    if (metadatas.length) {
       console.debug(``);
-      console.debug(`> Writing`, uploads.length, `results to asset-uploads.json..`);
-      writeUploads(uploads);
-      
-      console.debug(`> Writing`, uploads.length, `results to asset-uploads.csv..`);
-      writeUploadsCSV(uploads);
-
+      console.debug(`> Writing metadatas.json..`);
+      writeMetadata(metadatas);
     }
-    if (failed_uploads.length) {
-      console.debug(`> Writing`, failed_uploads.length, `to asset-uploads-failed.json..`);
-      writeFailedUploads(failed_uploads);
-    }
-
-    // post-balance checks..
-    const balance_post = await getBalance(keypair.publicKey);
-
+  
     const end_ts = performance.now();
     console.debug(
-      `>`, `Upload of`, metadatas.length, `nfts complete..`,
+      `>`, `Build of`, metadatas.length, ` nfts complete..`,
       `\n>`, parseFloat(((end_ts - start_ts) / 1000 / 60).toFixed(2)), `min\n`,
-      `- balance-pre:`, (balance_pre / LAMPORTS_PER_SOL), `SOL\n`,
-      `- balance-post:`, (balance_post / LAMPORTS_PER_SOL), `SOL\n`,
-      `- cost:`, ((balance_pre - balance_post) / LAMPORTS_PER_SOL), `SOL\n`,
     );
+  }
+  
+  if (UPLOAD) {
+
+    // read metadatas dir, and load json for each file..
+    const metadatas = fs.readdirSync(`./build/json`).map((m, i) => {
+      console.debug(`metadata:`, m);
+      const meta = JSON.parse(fs.readFileSync(`./build/json/${m}`, 'utf-8'));
+      meta.edition = parseInt(m);
+      return meta;
+    });
+    console.debug(`metadatas:`, metadatas);
+
+    if (storage_config.upload && metadatas.length) {
+      console.debug(``);
+      console.debug(`> Syncing image/json assets with arweave..`);
+      const start_ts = performance.now();
+      const uploads = [];
+      const failed_uploads = [];
+  
+      // pre-balance checks..
+      const balance_pre = await getBalance(keypair.publicKey);
+    
+      metadatas.map(metadata => {
+        console.debug(`metadata:`, metadata)
+        return upload_queue.add(async () => {
+          return new Promise(resolve => {
+    
+            const onUpload = (result, err) => {
+              if (err) {
+                console.error(`> [error]`, err);
+                failed_uploads.push(metadata);
+              } else {
+                uploads.push(result);
+                // writeUploads(uploads).then(resolve);
+              }
+              process.nextTick(resolve);
+            };
+    
+            console.debug(
+              `> dispatching upload`, metadata.name, `to worker`, `pending:`, upload_queue.pending
+            );
+            const edition = metadata.edition;
+            delete metadata.edition;
+            worker.upload(edition, metadata.image, metadata, onUpload.bind(null));
+    
+          });
+        });
+      });
+      
+      await upload_queue.onIdle();
+    
+      if (uploads.length) {
+        console.debug(``);
+        console.debug(`> Writing`, uploads.length, `results to asset-uploads.json..`);
+        writeUploads(uploads);
+        
+        console.debug(`> Writing`, uploads.length, `results to asset-uploads.csv..`);
+        writeUploadsCSV(uploads);
+  
+      }
+      if (failed_uploads.length) {
+        console.debug(`> Writing`, failed_uploads.length, `to asset-uploads-failed.json..`);
+        writeFailedUploads(failed_uploads);
+      }
+  
+      // post-balance checks..
+      const balance_post = await getBalance(keypair.publicKey);
+  
+      const end_ts = performance.now();
+      console.debug(
+        `>`, `Upload of`, metadatas.length, `nfts complete..`,
+        `\n>`, parseFloat(((end_ts - start_ts) / 1000 / 60).toFixed(2)), `min\n`,
+        `- balance-pre:`, (balance_pre / LAMPORTS_PER_SOL), `SOL\n`,
+        `- balance-post:`, (balance_post / LAMPORTS_PER_SOL), `SOL\n`,
+        `- cost:`, ((balance_pre - balance_post) / LAMPORTS_PER_SOL), `SOL\n`,
+      );
+    }
   }
 
   console.debug(`>`, `Stopping worker-farm..`);

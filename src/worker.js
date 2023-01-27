@@ -23,7 +23,8 @@ console.debug(`> keypair identity`, keypair.publicKey.toBase58());
 const metaplex = Metaplex
   .make(new Connection(process.env.SOLANA_RPC))
   .use(keypairIdentity(keypair))
-  .use(bundlrStorage());
+  .use(bundlrStorage({
+  }));
 const nfts = metaplex.nfts();
 
 const buildDir = `${basePath}/build`;
@@ -257,7 +258,7 @@ const is_retryable = (err) => {
   const rpc_retryable = [
     'enotfound',
     'econnreset',
-    'etimeout',
+    'etimedout',
     'eai_again',
     'blockhash not found',
     'unable to obtain a new blockhash after',
@@ -304,11 +305,22 @@ const upload = async (
       metadata: result.metadata,
     });
   })
-  .catch(err => {
-    if (is_retryable(err)) return upload(...arguments);
+  .catch(async (err) => {
+    if (is_retryable(err)) {
+      return upload(edition,
+        filename,
+        metadata,
+        callback,
+        ++attempt
+      );
+    }
     
-    console.error(`> [nfts.uploadMetadata error]`, err);
-    if (attempt > 10) return callback(null, err);
+    if (attempt > 2) {
+      console.error(`> [nfts.uploadMetadata error]`, err);
+      return callback(null, {
+        message: err.message,
+      });
+    }
 
     console.debug(`> [nfts.uploadMetadata] re-attempt(`, attempt, `)`, filename);
     return upload(edition, filename, metadata, callback, ++attempt);
